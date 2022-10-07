@@ -1,0 +1,6 @@
+apiVersion: riotkit.org/v1alpha1
+kind: RestoredBackup
+metadata:
+  name: restoredbackup-sample
+spec:
+  # TODO(user): Add fields here

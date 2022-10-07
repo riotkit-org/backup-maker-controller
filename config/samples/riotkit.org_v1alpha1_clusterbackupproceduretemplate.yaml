@@ -1,0 +1,6 @@
+apiVersion: riotkit.org/v1alpha1
+kind: ClusterBackupProcedureTemplate
+metadata:
+  name: clusterbackupproceduretemplate-sample
+spec:
+  # TODO(user): Add fields here

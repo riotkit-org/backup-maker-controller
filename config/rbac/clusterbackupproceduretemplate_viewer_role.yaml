@@ -1,0 +1,20 @@
+# permissions for end users to view clusterbackupproceduretemplates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clusterbackupproceduretemplate-viewer-role
+rules:
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates/status
+  verbs:
+  - get

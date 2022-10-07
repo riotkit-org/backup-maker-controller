@@ -1,0 +1,91 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - restoredbackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - restoredbackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - restoredbackups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - scheduledbackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - scheduledbackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - scheduledbackups/status
+  verbs:
+  - get
+  - patch
+  - update
