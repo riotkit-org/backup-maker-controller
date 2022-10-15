@@ -50,6 +50,8 @@ type RestoredBackup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// todo: make .spec immutable
+
 	Spec   RestoredBackupSpec   `json:"spec,omitempty"`
 	Status RestoredBackupStatus `json:"status,omitempty"`
 }

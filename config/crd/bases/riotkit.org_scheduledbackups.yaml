@@ -15,7 +15,15 @@ spec:
     singular: scheduledbackup
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Cron expression
+      jsonPath: .spec.cronjob.scheduleEvery
+      name: Schedule
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: ScheduledBackup is the Schema for the scheduledbackups API
@@ -37,6 +45,16 @@ spec:
             properties:
               collectionId:
                 type: string
+              cronJob:
+                properties:
+                  enabled:
+                    type: boolean
+                  scheduleEvery:
+                    default: 00 02 * * *
+                    type: string
+                required:
+                - enabled
+                type: object
               gpgKeySecretRef:
                 description: GPGKeySecretSpec represents .spec.gpgKeySecretRef section
                 properties:
@@ -60,6 +78,11 @@ spec:
                 - publicKey
                 - secretName
                 type: object
+              operation:
+                enum:
+                - backup
+                - restore
+                type: string
               templateRef:
                 description: TemplateSpec represents .spec.templateRef section
                 properties:
@@ -83,11 +106,9 @@ spec:
                 - tokenKey
                 type: object
               vars:
-                additionalProperties:
-                  type: string
                 description: VarsSpec represents .spec.vars - a hashmap of values
                   applied to template's backup & restore scripts
-                type: object
+                type: string
               varsSecretRef:
                 description: VarsSecretSpec represents .spec.varsSecretRef
                 properties:
@@ -97,13 +118,12 @@ spec:
                     type: array
                   secretName:
                     type: string
-                required:
-                - importOnlyKeys
-                - secretName
                 type: object
             required:
             - collectionId
+            - cronJob
             - gpgKeySecretRef
+            - operation
             - templateRef
             - tokenSecretRef
             - vars
@@ -117,6 +137,10 @@ spec:
               secretStatus:
                 type: boolean
               workloadStatus:
+                description: "todo: store there a some kind of hash as a last applied
+                  configuration id to know that the objects were already applied the
+                  hash should be calculated from the CRD properties \n todo: add history
+                  of conditions like the Deployment has"
                 type: boolean
             required:
             - configmapStatus

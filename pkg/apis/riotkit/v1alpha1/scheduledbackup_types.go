@@ -45,12 +45,12 @@ type TokenSecretSpec struct {
 
 // VarsSecretSpec represents .spec.varsSecretRef
 type VarsSecretSpec struct {
-	SecretName     string   `json:"secretName"`
-	ImportOnlyKeys []string `json:"importOnlyKeys"`
+	SecretName     string   `json:"secretName,omitempty"`
+	ImportOnlyKeys []string `json:"importOnlyKeys,omitempty"`
 }
 
 // VarsSpec represents .spec.vars - a hashmap of values applied to template's backup & restore scripts
-type VarsSpec map[string]string
+type VarsSpec string
 
 // ScheduledBackupSpec defines the desired state of ScheduledBackup
 type ScheduledBackupSpec struct {
@@ -60,10 +60,25 @@ type ScheduledBackupSpec struct {
 	TokenSecretRef  TokenSecretSpec  `json:"tokenSecretRef"`
 	VarsSecretRef   VarsSecretSpec   `json:"varsSecretRef"`
 	Vars            VarsSpec         `json:"vars"`
+	CronJob         CronJobSpec      `json:"cronJob"`
+
+	// +kubebuilder:validation:Enum=backup;restore
+	Operation string `json:"operation"`
+}
+
+type CronJobSpec struct {
+	Enabled bool `json:"enabled"`
+
+	// +kubebuilder:default:="00 02 * * *"
+	ScheduleEvery string `json:"scheduleEvery,omitempty"`
 }
 
 // ScheduledBackupStatus defines the observed state of ScheduledBackup
 type ScheduledBackupStatus struct {
+	// todo: store there a some kind of hash as a last applied configuration id to know that the objects were already applied
+	//       the hash should be calculated from the CRD properties
+	//
+	// todo: add history of conditions like the Deployment has
 	WorkloadStatus  bool `json:"workloadStatus"`
 	ConfigmapStatus bool `json:"configmapStatus"`
 	SecretStatus    bool `json:"secretStatus"`
@@ -73,6 +88,8 @@ type ScheduledBackupStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Schedule",type="string",JSONPath=".spec.cronjob.scheduleEvery",description="Cron expression"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // ScheduledBackup is the Schema for the scheduledbackups API
 type ScheduledBackup struct {

@@ -20,8 +20,11 @@ import (
 	"context"
 	"fmt"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/bmg"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -33,10 +36,12 @@ import (
 // ScheduledBackupReconciler reconciles a ScheduledBackup object
 type ScheduledBackupReconciler struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Cache    cache.Cache
-	Fetcher  factory.CachedFetcher
-	Recorder record.EventRecorder
+	RestCfg   *rest.Config
+	DynClient dynamic.Interface
+	Scheme    *runtime.Scheme
+	Cache     cache.Cache
+	Fetcher   factory.CachedFetcher
+	Recorder  record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=,resources=secrets,verbs=get;list;watch
@@ -60,6 +65,7 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Fetch reconciled object [ScheduledBackup]
 	//
 	backup, err := r.Fetcher.FetchScheduledBackup(ctx, req)
+	logger.Info(fmt.Sprintf("Processing '%s' from '%s' namespace", backup.Name, backup.Namespace))
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -77,12 +83,14 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{RequeueAfter: time.Minute * 15}, err
 	}
 
-	println(aggregate.UID)
+	if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
+		r.Recorder.Event(backup, "Warning", "ErrorOccurred", applyErr.Error())
+		return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
+	}
 
-	logger.Info(fmt.Sprintf("Processing '%s' from '%s' namespace", backup.Name, backup.Namespace))
+	// todo: handle panic
 
-	// todo: emit Kubernetes event on error
-
+	r.Recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Successfully reconciled '%s' from '%s' namespace", backup.Name, backup.Namespace))
 	return ctrl.Result{}, nil
 }
 

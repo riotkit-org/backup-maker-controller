@@ -1,0 +1,58 @@
+apiVersion: riotkit.org/v1alpha1
+kind: ScheduledBackup
+metadata:
+  name: app1
+  namespace: default
+spec:
+  operation: backup
+  cronJob:
+    enabled: true
+    scheduleEvery: "00 02 * * *"
+  collectionId: 1111-2222-3333-44445
+  gpgKeySecretRef:
+    createIfNotExists: true
+    email: example@example.org
+    passphraseKey: passphrase
+    privateKey: private
+    publicKey: public
+    secretName: backup-keys
+  templateRef:
+    kind: ClusterBackupProcedureTemplate
+    name: pg13
+  tokenSecretRef:
+    secretName: backup-keys
+    tokenKey: token
+  vars: |
+    # System-specific variables, in this case specific to PostgreSQL
+    # ${...} and $(...) syntax will be evaluated in target environment e.g. Kubernetes POD
+    Params:
+      hostname: postgres-postgresql.backup-repository.svc.cluster.local
+      port: 5432
+      db: backup-repository
+      user: riotkit
+      password: "putinchuj" # injects a shell-syntax, put your password in a `kind: Secret` and mount as environment variable. You can also use $(cat /mnt/secret) syntax, be aware of newlines!
+
+    # Generic repository access details. Everything here will land AS IS into the bash script.
+    # This means that any ${...} and $(...) will be executed in target environment e.g. inside Kubernetes POD
+    Repository:
+      url: "http://my-example.org"
+      token: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyy"
+      encryptionKeyPath: "/mnt/secrets/gpg-key"
+      passphrase: "riotkit"
+      recipient: "test@riotkit.org"
+      collectionId: "iwa-ait"
+
+    # Generic values for Helm used to generate jobs/pods. Those values will overwrite others.
+    # Notice: Environment variables with '${...}' and '$(...)' will be evaluated in LOCAL SHELL DURING BUILD
+    HelmValues:
+      env: { }
+        # if specified, then will be added to `kind: Secret` and injected into POD as environment
+        # the value from ${GPG_PASSPHRASE} will be retrieved from the SHELL DURING THE BUILD
+        #GPG_PASSPHRASE: "${GPG_PASSPHRASE}"
+
+      # most secure way for Kubernetes is to not provide secrets there, but define them as environment variables
+      # inside SealedSecrets - all encryptedData keys will be accessible as environment variables inside container
+  varsSecretRef:
+    importOnlyKeys:
+      - Params.password
+    secretName: backup-keys

@@ -21,6 +21,9 @@ import (
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -79,6 +82,16 @@ func main() {
 		os.Exit(1)
 	}
 	recorder := mgr.GetEventRecorderFor("backup-maker-operator")
+	kubeconfig, err := buildConfig(os.Getenv("KUBECONFIG"))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// check Kubernetes connection
+	dynClient, clErr := dynamic.NewForConfig(kubeconfig)
+	if clErr != nil {
+		panic(clErr.Error())
+	}
 
 	if err = (&controllers2.ClusterBackupProcedureTemplateReconciler{
 		Client: mgr.GetClient(),
@@ -89,11 +102,13 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers2.ScheduledBackupReconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Cache:    mgr.GetCache(),
-		Fetcher:  factory.CachedFetcher{Cache: mgr.GetCache()},
-		Recorder: recorder,
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Cache:     mgr.GetCache(),
+		RestCfg:   kubeconfig,
+		DynClient: dynClient,
+		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache()},
+		Recorder:  recorder,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ScheduledBackup")
 		os.Exit(1)
@@ -122,4 +137,20 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func buildConfig(kubeconfig string) (*rest.Config, error) {
+	if kubeconfig != "" {
+		cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			return nil, err
+		}
+		return cfg, nil
+	}
+
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
