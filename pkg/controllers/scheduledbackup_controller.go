@@ -89,6 +89,8 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	// todo: handle panic
+	// todo: Update status of reconciled object, insert there some hash to skip re-creation of resources if they would not change?
+	// todo: Add a status history, so the transitions will be visible
 
 	r.Recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Successfully reconciled '%s' from '%s' namespace", backup.Name, backup.Namespace))
 	return ctrl.Result{}, nil
