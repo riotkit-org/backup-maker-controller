@@ -17,7 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	json "encoding/json"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 // TemplateSpec represents .spec.templateRef section
@@ -66,6 +70,12 @@ type ScheduledBackupSpec struct {
 	Operation string `json:"operation"`
 }
 
+func (in *ScheduledBackupSpec) CalculateHash() string {
+	doc, _ := json.Marshal(in)
+	sum := sha256.Sum256(doc)
+	return hex.EncodeToString(sum[0:])
+}
+
 type CronJobSpec struct {
 	Enabled bool `json:"enabled"`
 
@@ -75,13 +85,8 @@ type CronJobSpec struct {
 
 // ScheduledBackupStatus defines the observed state of ScheduledBackup
 type ScheduledBackupStatus struct {
-	// todo: store there a some kind of hash as a last applied configuration id to know that the objects were already applied
-	//       the hash should be calculated from the CRD properties
-	//
-	// todo: add history of conditions like the Deployment has
-	WorkloadStatus  bool `json:"workloadStatus"`
-	ConfigmapStatus bool `json:"configmapStatus"`
-	SecretStatus    bool `json:"secretStatus"`
+	LastAppliedSpecHash string             `json:"lastAppliedSpecHash,omitempty"`
+	Conditions          []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +genclient
@@ -98,6 +103,23 @@ type ScheduledBackup struct {
 
 	Spec   ScheduledBackupSpec   `json:"spec,omitempty"`
 	Status ScheduledBackupStatus `json:"status,omitempty"`
+}
+
+// HasSpecChanged is telling if the current object's spec differs from the already applied object, basing on the status field
+func (in *ScheduledBackup) HasSpecChanged() bool {
+	return in.Spec.CalculateHash() != in.Status.LastAppliedSpecHash
+}
+
+func (in *ScheduledBackup) IsBeingReconciledAlready() bool {
+	for _, condition := range in.Status.Conditions {
+		timeDiff := time.Now().Sub(condition.LastTransitionTime.Time).Seconds()
+
+		// if there were less than 60 seconds from previous reconcilation
+		if timeDiff < 60 && condition.Status == "Unknown" {
+			return true
+		}
+	}
+	return false
 }
 
 // +kubebuilder:object:root=true

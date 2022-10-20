@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
 	"k8s.io/client-go/dynamic"
@@ -92,6 +93,10 @@ func main() {
 	if clErr != nil {
 		panic(clErr.Error())
 	}
+	brClient, clErr := v1alpha1.NewForConfig(kubeconfig)
+	if clErr != nil {
+		panic(clErr.Error())
+	}
 
 	if err = (&controllers2.ClusterBackupProcedureTemplateReconciler{
 		Client: mgr.GetClient(),
@@ -105,6 +110,7 @@ func main() {
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		Cache:     mgr.GetCache(),
+		BRClient:  brClient,
 		RestCfg:   kubeconfig,
 		DynClient: dynClient,
 		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache()},

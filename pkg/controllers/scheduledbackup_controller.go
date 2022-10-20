@@ -19,13 +19,20 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/riotkit-org/backup-maker-operator/pkg/aggregates"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/bmg"
+	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,6 +45,7 @@ type ScheduledBackupReconciler struct {
 	client.Client
 	RestCfg   *rest.Config
 	DynClient dynamic.Interface
+	BRClient  v1alpha1.RiotkitV1alpha1Interface
 	Scheme    *runtime.Scheme
 	Cache     cache.Cache
 	Fetcher   factory.CachedFetcher
@@ -49,15 +57,7 @@ type ScheduledBackupReconciler struct {
 // +kubebuilder:rbac:groups=riotkit.org,resources=scheduledbackups/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=riotkit.org,resources=scheduledbackups/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the ScheduledBackup object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
+// Reconcile is the main loop for ScheduledBackup type objects
 func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -70,30 +70,78 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	f := factory.NewFactory(r.Client, r.Fetcher, logger)
-	aggregate, controllerAction, hydrateErr := f.CreateScheduledBackupAggregate(
-		ctx, backup,
-	)
-	if hydrateErr != nil {
-		r.Recorder.Event(backup, "Warning", "ErrorOccurred", hydrateErr.Error())
+	if backup.HasSpecChanged() && !backup.IsBeingReconciledAlready() {
+		f := factory.NewFactory(r.Client, r.Fetcher, logger)
+		aggregate, controllerAction, hydrateErr := f.CreateScheduledBackupAggregate(
+			ctx, backup,
+		)
 
-		if controllerAction == factory.ErrorActionRequeue {
-			return ctrl.Result{RequeueAfter: time.Second * 5}, nil
+		r.updateObject(ctx, aggregate, metav1.Condition{
+			Status:  "Unknown",
+			Message: "Reconciling to template and push target objects to the cluster (Jobs/CronJobs and related things)",
+		})
+
+		if hydrateErr != nil {
+			r.updateObject(ctx, aggregate, metav1.Condition{
+				Status:  "False",
+				Message: fmt.Sprintf("Cannot find required dependencies: %s", hydrateErr.Error()),
+			})
+			r.Recorder.Event(backup, "Warning", "ErrorOccurred", hydrateErr.Error())
+
+			if controllerAction == factory.ErrorActionRequeue {
+				return ctrl.Result{RequeueAfter: time.Second * 5}, nil
+			}
+			return ctrl.Result{RequeueAfter: time.Minute * 15}, err
 		}
-		return ctrl.Result{RequeueAfter: time.Minute * 15}, err
+
+		if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
+			r.updateObject(ctx, aggregate, metav1.Condition{
+				Status:  "False",
+				Message: fmt.Sprintf("Cannot template or apply objects to the cluster: %s", applyErr.Error()),
+			})
+			r.Recorder.Event(backup, "Warning", "ErrorOccurred", applyErr.Error())
+			return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
+		}
+
+		// todo: handle panics
+
+		r.updateObject(ctx, aggregate, metav1.Condition{
+			Status:  "True",
+			Message: "Successfully templated and applied objects to the cluster",
+		})
+		r.Recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Successfully reconciled '%s' from '%s' namespace", backup.Name, backup.Namespace))
+	} else {
+		logrus.Infof("Spec not changed for '%s' from '%s' namespace", backup.Name, backup.Namespace)
 	}
 
-	if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
-		r.Recorder.Event(backup, "Warning", "ErrorOccurred", applyErr.Error())
-		return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
-	}
-
-	// todo: handle panic
-	// todo: Update status of reconciled object, insert there some hash to skip re-creation of resources if they would not change?
-	// todo: Add a status history, so the transitions will be visible
-
-	r.Recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Successfully reconciled '%s' from '%s' namespace", backup.Name, backup.Namespace))
 	return ctrl.Result{}, nil
+}
+
+// updateObject is updating the .status field
+func (r *ScheduledBackupReconciler) updateObject(ctx context.Context, aggregate *aggregates.ScheduledBackupAggregate, condition metav1.Condition) {
+	updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		// Fetch a fresh object to avoid: "the object has been modified; please apply your changes to the latest version and try again"
+		res, getErr := r.BRClient.ScheduledBackups(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
+		if getErr != nil {
+			return getErr
+		}
+
+		// Update condition
+		condition.Reason = "SpecWasUpdated"
+		condition.Type = "BackupObjectsInstallation"
+		condition.ObservedGeneration = res.Generation
+		if condition.Status == "True" {
+			res.Status.LastAppliedSpecHash = aggregate.Spec.CalculateHash()
+		}
+		meta.SetStatusCondition(&res.Status.Conditions, condition)
+
+		// Update object's status field
+		_, updateErr := r.BRClient.ScheduledBackups(aggregate.Namespace).UpdateStatus(ctx, res, metav1.UpdateOptions{})
+		return updateErr
+	})
+	if updateErr != nil {
+		r.Recorder.Event(aggregate.ScheduledBackup, "Warning", "ErrorOccurred", fmt.Sprintf("Cannot update .status field: %s", updateErr.Error()))
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
