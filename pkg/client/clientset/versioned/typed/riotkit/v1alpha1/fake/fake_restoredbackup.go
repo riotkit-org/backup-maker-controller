@@ -22,23 +22,23 @@ type FakeRestoredBackups struct {
 
 var restoredbackupsResource = schema.GroupVersionResource{Group: "riotkit.org", Version: "v1alpha1", Resource: "restoredbackups"}
 
-var restoredbackupsKind = schema.GroupVersionKind{Group: "riotkit.org", Version: "v1alpha1", Kind: "RestoredBackup"}
+var restoredbackupsKind = schema.GroupVersionKind{Group: "riotkit.org", Version: "v1alpha1", Kind: "RequestedBackupAction"}
 
 // Get takes name of the restoredBackup, and returns the corresponding restoredBackup object, and an error if there is any.
-func (c *FakeRestoredBackups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.RestoredBackup, err error) {
+func (c *FakeRestoredBackups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.RequestedBackupAction, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(restoredbackupsResource, c.ns, name), &v1alpha1.RestoredBackup{})
+		Invokes(testing.NewGetAction(restoredbackupsResource, c.ns, name), &v1alpha1.RequestedBackupAction{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.RestoredBackup), err
+	return obj.(*v1alpha1.RequestedBackupAction), err
 }
 
 // List takes label and field selectors, and returns the list of RestoredBackups that match those selectors.
-func (c *FakeRestoredBackups) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.RestoredBackupList, err error) {
+func (c *FakeRestoredBackups) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.RequestedBackupActionList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(restoredbackupsResource, restoredbackupsKind, c.ns, opts), &v1alpha1.RestoredBackupList{})
+		Invokes(testing.NewListAction(restoredbackupsResource, restoredbackupsKind, c.ns, opts), &v1alpha1.RequestedBackupActionList{})
 
 	if obj == nil {
 		return nil, err
@@ -48,8 +48,8 @@ func (c *FakeRestoredBackups) List(ctx context.Context, opts v1.ListOptions) (re
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.RestoredBackupList{ListMeta: obj.(*v1alpha1.RestoredBackupList).ListMeta}
-	for _, item := range obj.(*v1alpha1.RestoredBackupList).Items {
+	list := &v1alpha1.RequestedBackupActionList{ListMeta: obj.(*v1alpha1.RequestedBackupActionList).ListMeta}
+	for _, item := range obj.(*v1alpha1.RequestedBackupActionList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -65,43 +65,43 @@ func (c *FakeRestoredBackups) Watch(ctx context.Context, opts v1.ListOptions) (w
 }
 
 // Create takes the representation of a restoredBackup and creates it.  Returns the server's representation of the restoredBackup, and an error, if there is any.
-func (c *FakeRestoredBackups) Create(ctx context.Context, restoredBackup *v1alpha1.RestoredBackup, opts v1.CreateOptions) (result *v1alpha1.RestoredBackup, err error) {
+func (c *FakeRestoredBackups) Create(ctx context.Context, restoredBackup *v1alpha1.RequestedBackupAction, opts v1.CreateOptions) (result *v1alpha1.RequestedBackupAction, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(restoredbackupsResource, c.ns, restoredBackup), &v1alpha1.RestoredBackup{})
+		Invokes(testing.NewCreateAction(restoredbackupsResource, c.ns, restoredBackup), &v1alpha1.RequestedBackupAction{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.RestoredBackup), err
+	return obj.(*v1alpha1.RequestedBackupAction), err
 }
 
 // Update takes the representation of a restoredBackup and updates it. Returns the server's representation of the restoredBackup, and an error, if there is any.
-func (c *FakeRestoredBackups) Update(ctx context.Context, restoredBackup *v1alpha1.RestoredBackup, opts v1.UpdateOptions) (result *v1alpha1.RestoredBackup, err error) {
+func (c *FakeRestoredBackups) Update(ctx context.Context, restoredBackup *v1alpha1.RequestedBackupAction, opts v1.UpdateOptions) (result *v1alpha1.RequestedBackupAction, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(restoredbackupsResource, c.ns, restoredBackup), &v1alpha1.RestoredBackup{})
+		Invokes(testing.NewUpdateAction(restoredbackupsResource, c.ns, restoredBackup), &v1alpha1.RequestedBackupAction{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.RestoredBackup), err
+	return obj.(*v1alpha1.RequestedBackupAction), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeRestoredBackups) UpdateStatus(ctx context.Context, restoredBackup *v1alpha1.RestoredBackup, opts v1.UpdateOptions) (*v1alpha1.RestoredBackup, error) {
+func (c *FakeRestoredBackups) UpdateStatus(ctx context.Context, restoredBackup *v1alpha1.RequestedBackupAction, opts v1.UpdateOptions) (*v1alpha1.RequestedBackupAction, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(restoredbackupsResource, "status", c.ns, restoredBackup), &v1alpha1.RestoredBackup{})
+		Invokes(testing.NewUpdateSubresourceAction(restoredbackupsResource, "status", c.ns, restoredBackup), &v1alpha1.RequestedBackupAction{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.RestoredBackup), err
+	return obj.(*v1alpha1.RequestedBackupAction), err
 }
 
 // Delete takes name of the restoredBackup and deletes it. Returns an error if one occurs.
 func (c *FakeRestoredBackups) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(restoredbackupsResource, c.ns, name), &v1alpha1.RestoredBackup{})
+		Invokes(testing.NewDeleteAction(restoredbackupsResource, c.ns, name), &v1alpha1.RequestedBackupAction{})
 
 	return err
 }
@@ -110,17 +110,17 @@ func (c *FakeRestoredBackups) Delete(ctx context.Context, name string, opts v1.D
 func (c *FakeRestoredBackups) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(restoredbackupsResource, c.ns, listOpts)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.RestoredBackupList{})
+	_, err := c.Fake.Invokes(action, &v1alpha1.RequestedBackupActionList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched restoredBackup.
-func (c *FakeRestoredBackups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RestoredBackup, err error) {
+func (c *FakeRestoredBackups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.RequestedBackupAction, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(restoredbackupsResource, c.ns, name, pt, data, subresources...), &v1alpha1.RestoredBackup{})
+		Invokes(testing.NewPatchSubresourceAction(restoredbackupsResource, c.ns, name, pt, data, subresources...), &v1alpha1.RequestedBackupAction{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.RestoredBackup), err
+	return obj.(*v1alpha1.RequestedBackupAction), err
 }

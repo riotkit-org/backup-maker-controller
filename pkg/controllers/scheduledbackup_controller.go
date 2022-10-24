@@ -61,6 +61,9 @@ type ScheduledBackupReconciler struct {
 func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
+	// todo: support case, when cron=false. Then do not create CronJob or Job objects. Such case would mean manual triggering of the backup process
+	// todo: backup rotation - basing on the server settings
+
 	//
 	// Fetch reconciled object [ScheduledBackup]
 	//

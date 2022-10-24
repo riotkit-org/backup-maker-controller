@@ -119,12 +119,17 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ScheduledBackup")
 		os.Exit(1)
 	}
-	if err = (&controllers2.RestoredBackupReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Cache:  mgr.GetCache(),
+	if err = (&controllers2.RequestedBackupActionReconciler{
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Cache:     mgr.GetCache(),
+		BRClient:  brClient,
+		DynClient: dynClient,
+		RestCfg:   kubeconfig,
+		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache()},
+		Recorder:  recorder,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "RestoredBackup")
+		setupLog.Error(err, "unable to create controller", "controller", "RequestedBackupAction")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

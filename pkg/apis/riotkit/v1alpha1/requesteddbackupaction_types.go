@@ -24,20 +24,17 @@ type BackupRefSpec struct {
 	Name string `json:"name"`
 }
 
-// RestoredBackupSpec defines the desired state of RestoredBackup
-type RestoredBackupSpec struct {
-	// Foo is an example field of RestoredBackup. Edit restoredbackup_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
-
-	TargetVersion      string        `json:"targetVersion"`
+// RequestedBackupActionSpec defines the desired state of RequestedBackupAction
+type RequestedBackupActionSpec struct {
+	// +kubebuilder:validation:Enum=backup;restore
+	Action             string        `json:"action"`
+	TargetVersion      string        `json:"targetVersion,omitempty"` // can be empty, when action = "backup"
 	ScheduledBackupRef BackupRefSpec `json:"scheduledBackupRef"`
 }
 
-// RestoredBackupStatus defines the observed state of RestoredBackup
-type RestoredBackupStatus struct {
-	PodName   string `json:"podName"`
-	Succeeded bool   `json:"succeeded"`
-	Started   bool   `json:"started"`
+// RequestedBackupActionStatus defines the observed state of RequestedBackupAction
+type RequestedBackupActionStatus struct {
+	Processed bool `json:"processed"`
 }
 
 // +genclient
@@ -45,23 +42,23 @@ type RestoredBackupStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// RestoredBackup is the Schema for the restoredbackups API
-type RestoredBackup struct {
+// RequestedBackupAction is the Schema for the requestedbackupactions API
+type RequestedBackupAction struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// todo: make .spec immutable
 
-	Spec   RestoredBackupSpec   `json:"spec,omitempty"`
-	Status RestoredBackupStatus `json:"status,omitempty"`
+	Spec   RequestedBackupActionSpec   `json:"spec,omitempty"`
+	Status RequestedBackupActionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RestoredBackupList contains a list of RestoredBackup
-type RestoredBackupList struct {
+// RequestedBackupActionList contains a list of RequestedBackupAction
+type RequestedBackupActionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []RestoredBackup `json:"items"`
+	Items           []RequestedBackupAction `json:"items"`
 }

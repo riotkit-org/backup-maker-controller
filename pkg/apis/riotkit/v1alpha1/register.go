@@ -31,8 +31,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&ClusterBackupProcedureTemplate{},
 		&ClusterBackupProcedureTemplateList{},
-		&RestoredBackup{},
-		&RestoredBackupList{},
+		&RequestedBackupAction{},
+		&RequestedBackupActionList{},
 		&ScheduledBackup{},
 		&ScheduledBackupList{},
 	)

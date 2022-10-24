@@ -16,10 +16,6 @@ func (c *FakeRiotkitV1alpha1) ClusterBackupProcedureTemplates(namespace string) 
 	return &FakeClusterBackupProcedureTemplates{c, namespace}
 }
 
-func (c *FakeRiotkitV1alpha1) RestoredBackups(namespace string) v1alpha1.RestoredBackupInterface {
-	return &FakeRestoredBackups{c, namespace}
-}
-
 func (c *FakeRiotkitV1alpha1) ScheduledBackups(namespace string) v1alpha1.ScheduledBackupInterface {
 	return &FakeScheduledBackups{c, namespace}
 }

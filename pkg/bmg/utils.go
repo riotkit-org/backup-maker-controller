@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/riotkit-org/backup-maker-operator/pkg/aggregates"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
 	memory "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
@@ -22,7 +22,7 @@ func CreateOrUpdate(
 	dyn dynamic.Interface,
 	restCfg *rest.Config,
 	obj *unstructured.Unstructured,
-	backup *aggregates.ScheduledBackupAggregate,
+	backup runtime.Object, // todo: change to runtime.Object
 ) error {
 	dc, err := discovery.NewDiscoveryClientForConfig(restCfg)
 	if err != nil {
@@ -46,7 +46,7 @@ func CreateOrUpdate(
 		if _, createErr := c.Create(ctx, obj, v1.CreateOptions{}); createErr != nil {
 			return errors.Wrap(createErr, "cannot create object in API")
 		}
-		recorder.Event(backup.ScheduledBackup, "Normal", "Created", fmt.Sprintf("Creating %s/%s, named %s/%s", apiVersion, kind, obj.GetNamespace(), obj.GetName()))
+		recorder.Event(backup, "Normal", "Created", fmt.Sprintf("Creating %s/%s, named %s/%s", apiVersion, kind, obj.GetNamespace(), obj.GetName()))
 		return nil
 	}
 
@@ -54,6 +54,6 @@ func CreateOrUpdate(
 	if _, updateErr := c.Update(ctx, obj, v1.UpdateOptions{}); updateErr != nil {
 		return errors.Wrap(updateErr, "cannot update object in API")
 	}
-	recorder.Event(backup.ScheduledBackup, "Normal", "Updated", fmt.Sprintf("Updating %s/%s, named %s/%s", apiVersion, kind, obj.GetNamespace(), obj.GetName()))
+	recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Updating %s/%s, named %s/%s", apiVersion, kind, obj.GetNamespace(), obj.GetName()))
 	return nil
 }

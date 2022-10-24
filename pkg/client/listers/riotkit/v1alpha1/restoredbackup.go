@@ -14,7 +14,7 @@ import (
 type RestoredBackupLister interface {
 	// List lists all RestoredBackups in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.RestoredBackup, err error)
+	List(selector labels.Selector) (ret []*v1alpha1.RequestedBackupAction, err error)
 	// RestoredBackups returns an object that can list and get RestoredBackups.
 	RestoredBackups(namespace string) RestoredBackupNamespaceLister
 	RestoredBackupListerExpansion
@@ -31,9 +31,9 @@ func NewRestoredBackupLister(indexer cache.Indexer) RestoredBackupLister {
 }
 
 // List lists all RestoredBackups in the indexer.
-func (s *restoredBackupLister) List(selector labels.Selector) (ret []*v1alpha1.RestoredBackup, err error) {
+func (s *restoredBackupLister) List(selector labels.Selector) (ret []*v1alpha1.RequestedBackupAction, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.RestoredBackup))
+		ret = append(ret, m.(*v1alpha1.RequestedBackupAction))
 	})
 	return ret, err
 }
@@ -48,10 +48,10 @@ func (s *restoredBackupLister) RestoredBackups(namespace string) RestoredBackupN
 type RestoredBackupNamespaceLister interface {
 	// List lists all RestoredBackups in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.RestoredBackup, err error)
-	// Get retrieves the RestoredBackup from the indexer for a given namespace and name.
+	List(selector labels.Selector) (ret []*v1alpha1.RequestedBackupAction, err error)
+	// Get retrieves the RequestedBackupAction from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.RestoredBackup, error)
+	Get(name string) (*v1alpha1.RequestedBackupAction, error)
 	RestoredBackupNamespaceListerExpansion
 }
 
@@ -63,15 +63,15 @@ type restoredBackupNamespaceLister struct {
 }
 
 // List lists all RestoredBackups in the indexer for a given namespace.
-func (s restoredBackupNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.RestoredBackup, err error) {
+func (s restoredBackupNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.RequestedBackupAction, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.RestoredBackup))
+		ret = append(ret, m.(*v1alpha1.RequestedBackupAction))
 	})
 	return ret, err
 }
 
-// Get retrieves the RestoredBackup from the indexer for a given namespace and name.
-func (s restoredBackupNamespaceLister) Get(name string) (*v1alpha1.RestoredBackup, error) {
+// Get retrieves the RequestedBackupAction from the indexer for a given namespace and name.
+func (s restoredBackupNamespaceLister) Get(name string) (*v1alpha1.RequestedBackupAction, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
@@ -79,5 +79,5 @@ func (s restoredBackupNamespaceLister) Get(name string) (*v1alpha1.RestoredBacku
 	if !exists {
 		return nil, errors.NewNotFound(v1alpha1.Resource("restoredbackup"), name)
 	}
-	return obj.(*v1alpha1.RestoredBackup), nil
+	return obj.(*v1alpha1.RequestedBackupAction), nil
 }

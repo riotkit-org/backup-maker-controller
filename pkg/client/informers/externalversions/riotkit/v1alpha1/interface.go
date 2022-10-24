@@ -10,8 +10,6 @@ import (
 type Interface interface {
 	// ClusterBackupProcedureTemplates returns a ClusterBackupProcedureTemplateInformer.
 	ClusterBackupProcedureTemplates() ClusterBackupProcedureTemplateInformer
-	// RestoredBackups returns a RestoredBackupInformer.
-	RestoredBackups() RestoredBackupInformer
 	// ScheduledBackups returns a ScheduledBackupInformer.
 	ScheduledBackups() ScheduledBackupInformer
 }
@@ -30,11 +28,6 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ClusterBackupProcedureTemplates returns a ClusterBackupProcedureTemplateInformer.
 func (v *version) ClusterBackupProcedureTemplates() ClusterBackupProcedureTemplateInformer {
 	return &clusterBackupProcedureTemplateInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// RestoredBackups returns a RestoredBackupInformer.
-func (v *version) RestoredBackups() RestoredBackupInformer {
-	return &restoredBackupInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ScheduledBackups returns a ScheduledBackupInformer.

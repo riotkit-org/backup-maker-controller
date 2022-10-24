@@ -25,6 +25,7 @@ func NewFactory(client client.Client, fetcher CachedFetcher, logger logr.Logger)
 	return &Factory{Client: client, fetcher: fetcher, logger: logger}
 }
 
+// CreateScheduledBackupAggregate is creating a fully hydrated object (aggregate) with all dependencies inside
 func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1alpha1.ScheduledBackup) (*aggregates.ScheduledBackupAggregate, error, error) {
 	aggregate := aggregates.ScheduledBackupAggregate{ScheduledBackup: backup}
 
@@ -42,6 +43,21 @@ func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1
 	}
 
 	return &aggregate, nil, nil
+}
+
+// CreateRequestedBackupActionAggregate is creating a fully hydrated object (aggregate) with all dependencies inside
+func (c *Factory) CreateRequestedBackupActionAggregate(ctx context.Context, action *v1alpha1.RequestedBackupAction, scheduledBackup *v1alpha1.ScheduledBackup) (*aggregates.RequestedBackupActionAggregate, error, error) {
+	scheduledBackupAggregate, _, fetchErr := c.CreateScheduledBackupAggregate(ctx, scheduledBackup)
+	a := aggregates.RequestedBackupActionAggregate{RequestedBackupAction: action, Scheduled: scheduledBackupAggregate}
+	if fetchErr != nil {
+		return &a, ErrorActionRequeue, fetchErr
+	}
+
+	// modify it according to the current ACTION
+	scheduledBackup.Spec.CronJob.Enabled = false        // we cannot generate a CronJob in this case :-)
+	scheduledBackup.Spec.Operation = action.Spec.Action // we should enforce an action as RequestedBackupAction is a manual TRIGGER for ScheduledBackup
+
+	return &a, nil, nil
 }
 
 // GPG secrets [Secret]

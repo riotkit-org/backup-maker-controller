@@ -11,7 +11,6 @@ import (
 type RiotkitV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ClusterBackupProcedureTemplatesGetter
-	RestoredBackupsGetter
 	ScheduledBackupsGetter
 }
 
@@ -22,10 +21,6 @@ type RiotkitV1alpha1Client struct {
 
 func (c *RiotkitV1alpha1Client) ClusterBackupProcedureTemplates(namespace string) ClusterBackupProcedureTemplateInterface {
 	return newClusterBackupProcedureTemplates(c, namespace)
-}
-
-func (c *RiotkitV1alpha1Client) RestoredBackups(namespace string) RestoredBackupInterface {
-	return newRestoredBackups(c, namespace)
 }
 
 func (c *RiotkitV1alpha1Client) ScheduledBackups(namespace string) ScheduledBackupInterface {

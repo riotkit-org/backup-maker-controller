@@ -5,20 +5,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  name: restoredbackups.riotkit.org
+  name: requestedbackupactions.riotkit.org
 spec:
   group: riotkit.org
   names:
-    kind: RestoredBackup
-    listKind: RestoredBackupList
-    plural: restoredbackups
-    singular: restoredbackup
+    kind: RequestedBackupAction
+    listKind: RequestedBackupActionList
+    plural: requestedbackupactions
+    singular: requestedbackupaction
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RestoredBackup is the Schema for the restoredbackups API
+        description: RequestedBackupAction is the Schema for the requestedbackupactions
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,11 +34,12 @@ spec:
           metadata:
             type: object
           spec:
-            description: RestoredBackupSpec defines the desired state of RestoredBackup
+            description: RequestedBackupActionSpec defines the desired state of RequestedBackupAction
             properties:
-              foo:
-                description: Foo is an example field of RestoredBackup. Edit restoredbackup_types.go
-                  to remove/update
+              action:
+                enum:
+                - backup
+                - restore
                 type: string
               scheduledBackupRef:
                 properties:
@@ -49,22 +51,17 @@ spec:
               targetVersion:
                 type: string
             required:
+            - action
             - scheduledBackupRef
-            - targetVersion
             type: object
           status:
-            description: RestoredBackupStatus defines the observed state of RestoredBackup
+            description: RequestedBackupActionStatus defines the observed state of
+              RequestedBackupAction
             properties:
-              podName:
-                type: string
-              started:
-                type: boolean
-              succeeded:
+              processed:
                 type: boolean
             required:
-            - podName
-            - started
-            - succeeded
+            - processed
             type: object
         type: object
     served: true
