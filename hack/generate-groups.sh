@@ -32,7 +32,8 @@ APIS_PKG="$3"
 GROUPS_WITH_VERSIONS="$4"
 shift 4
 
-GENERATOR_VERSION=v0.20.2
+echo " >> Installing code-generator"
+GENERATOR_VERSION=v0.25.3
 (
   # To support running this script from anywhere, we have to first cd into this directory
   # so we can install the tools.
@@ -74,13 +75,13 @@ for GVs in ${GROUPS_WITH_VERSIONS}; do
   done
 done
 
+echo " >> Starting generation"
+
 # All generators expect a mandatory boilerplate file as input. Since we don't add any boilerplate we use process substitution '<( )' to pass a dummy empty file.
 # See also https://github.com/kubernetes/code-generator/issues/6
 if [ "${GENS}" = "all" ] || grep -qw "deepcopy" <<<"${GENS}"; then
   echo "Generating deepcopy funcs for ${GROUPS_WITH_VERSIONS}"
-  set -x
   "${PREFIX}/deepcopy-gen" --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" -O zz_generated.deepcopy --bounding-dirs "${APIS_PKG}" --go-header-file <(echo "")
-  set +x
 fi
 
 if [ "${GENS}" = "all" ] || grep -qw "client" <<<"${GENS}"; then

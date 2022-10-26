@@ -4,6 +4,6 @@ package v1alpha1
 
 type ClusterBackupProcedureTemplateExpansion interface{}
 
-type RestoredBackupExpansion interface{}
+type RequestedBackupActionExpansion interface{}
 
 type ScheduledBackupExpansion interface{}

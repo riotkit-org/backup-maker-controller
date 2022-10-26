@@ -39,6 +39,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=riotkit.org, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("clusterbackupproceduretemplates"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Riotkit().V1alpha1().ClusterBackupProcedureTemplates().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("requestedbackupactions"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Riotkit().V1alpha1().RequestedBackupActions().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("scheduledbackups"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Riotkit().V1alpha1().ScheduledBackups().Informer()}, nil
 

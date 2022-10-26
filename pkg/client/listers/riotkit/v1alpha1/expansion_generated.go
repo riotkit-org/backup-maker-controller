@@ -10,13 +10,13 @@ type ClusterBackupProcedureTemplateListerExpansion interface{}
 // ClusterBackupProcedureTemplateNamespaceLister.
 type ClusterBackupProcedureTemplateNamespaceListerExpansion interface{}
 
-// RestoredBackupListerExpansion allows custom methods to be added to
-// RestoredBackupLister.
-type RestoredBackupListerExpansion interface{}
+// RequestedBackupActionListerExpansion allows custom methods to be added to
+// RequestedBackupActionLister.
+type RequestedBackupActionListerExpansion interface{}
 
-// RestoredBackupNamespaceListerExpansion allows custom methods to be added to
-// RestoredBackupNamespaceLister.
-type RestoredBackupNamespaceListerExpansion interface{}
+// RequestedBackupActionNamespaceListerExpansion allows custom methods to be added to
+// RequestedBackupActionNamespaceLister.
+type RequestedBackupActionNamespaceListerExpansion interface{}
 
 // ScheduledBackupListerExpansion allows custom methods to be added to
 // ScheduledBackupLister.

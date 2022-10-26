@@ -40,7 +40,7 @@ rules:
 - apiGroups:
   - riotkit.org
   resources:
-  - restoredbackups
+  - requestedbackupactions
   verbs:
   - create
   - delete
@@ -52,13 +52,13 @@ rules:
 - apiGroups:
   - riotkit.org
   resources:
-  - restoredbackups/finalizers
+  - requestedbackupactions/finalizers
   verbs:
   - update
 - apiGroups:
   - riotkit.org
   resources:
-  - restoredbackups/status
+  - requestedbackupactions/status
   verbs:
   - get
   - patch

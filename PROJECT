@@ -25,13 +25,3 @@ resources:
   kind: ScheduledBackup
   path: github.com/riotkit-org/backup-maker-operator/api/v1alpha1
   version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: riotkit.org
-  group: riotkit.org
-  kind: RestoredBackup
-  path: github.com/riotkit-org/backup-maker-operator/api/v1alpha1
-  version: v1alpha1
-version: "3"

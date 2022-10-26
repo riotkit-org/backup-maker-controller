@@ -76,9 +76,9 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 	return aggregate, ctrl.Result{}, nil
 }
 
-// +kubebuilder:rbac:groups=riotkit.org,resources=restoredbackups,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=riotkit.org,resources=restoredbackups/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=riotkit.org,resources=restoredbackups/finalizers,verbs=update
+// +kubebuilder:rbac:groups=riotkit.org,resources=requestedbackupactions,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=riotkit.org,resources=requestedbackupactions/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=riotkit.org,resources=requestedbackupactions/finalizers,verbs=update
 
 // Reconcile main loop for RequestedBackupAction controller
 func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
