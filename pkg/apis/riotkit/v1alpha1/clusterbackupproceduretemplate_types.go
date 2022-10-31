@@ -36,6 +36,8 @@ type ClusterBackupProcedureTemplateStatus struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +genclient:nonNamespaced
+// +kubebuilder:resource:scope=Cluster
 
 // ClusterBackupProcedureTemplate is the Schema for the clusterbackupproceduretemplates API
 type ClusterBackupProcedureTemplate struct {
@@ -52,6 +54,8 @@ func (in *ClusterBackupProcedureTemplate) GetCacheId() string {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
+// +genclient:nonNamespaced
+// +kubebuilder:resource:scope=Cluster
 
 // ClusterBackupProcedureTemplateList contains a list of ClusterBackupProcedureTemplate
 type ClusterBackupProcedureTemplateList struct {

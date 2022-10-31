@@ -31,7 +31,7 @@ func (r *CachedFetcher) FetchRequestedBackupAction(ctx context.Context, req ctrl
 // fetchTemplate is fetching a template from cache
 func (r *CachedFetcher) fetchTemplate(ctx context.Context, backup *riotkitorgv1alpha1.ScheduledBackup) (*riotkitorgv1alpha1.ClusterBackupProcedureTemplate, error) {
 	template := riotkitorgv1alpha1.ClusterBackupProcedureTemplate{}
-	getErr := r.Cache.Get(ctx, client.ObjectKey{Name: backup.Spec.TemplateRef.Name, Namespace: backup.Namespace}, &template)
+	getErr := r.Cache.Get(ctx, client.ObjectKey{Name: backup.Spec.TemplateRef.Name}, &template)
 	return &template, getErr
 }
 

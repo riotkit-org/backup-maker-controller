@@ -24,3 +24,6 @@ bin/*
 *.swp
 *.swo
 *~
+
+# automatically created when running operator locally
+/templates/
