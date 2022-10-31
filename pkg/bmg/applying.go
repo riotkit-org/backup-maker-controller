@@ -24,6 +24,9 @@ func ApplyScheduledBackup(ctx context.Context, recorder record.EventRecorder, re
 		addNamespace(&doc, backup.GetScheduledBackup().Namespace)
 	}
 
+	if len(rendered) == 0 {
+		return errors.Errorf("no objects rendered, no objects to apply. Please check your template - it did not render any of those objects: %v", backup.AcceptedResourceTypes())
+	}
 	for _, doc := range rendered {
 		apiVersion, kind := doc.GroupVersionKind().ToAPIVersionAndKind()
 		logrus.Infof("Applying %s, kind: %s, %s/%s", apiVersion, kind, doc.GetNamespace(), doc.GetName())

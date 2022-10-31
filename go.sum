@@ -1052,6 +1052,14 @@ github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40T
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221008125030-622a65829908 h1:lGY0WMUTLZxJv73+VT7Ma2gwVZ5aEDGPgW9JPP1J5hQ=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221008125030-622a65829908/go.mod h1:4nPqRP4fhjxQobP7JnSHrgcQ5mQhnk9IH9TzfJg8g6o=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221027192248-038b7cf58c8c h1:iVBO1f2O6DiH9jNww4rr5D8b4SdTM6AhZZGTUxb/rIk=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221027192248-038b7cf58c8c/go.mod h1:4nPqRP4fhjxQobP7JnSHrgcQ5mQhnk9IH9TzfJg8g6o=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221027201028-6604fe4ebeaa h1:kj6inlk8UVnFmb0HZqmHw8jXq7ejHpOcWy6VLKIVGHw=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221027201028-6604fe4ebeaa/go.mod h1:4nPqRP4fhjxQobP7JnSHrgcQ5mQhnk9IH9TzfJg8g6o=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221027203740-6d73dc3f4831 h1:zwiBck4d06YffYFABAlL9vObGgBxAje9pp6W/2SOJ1c=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221027203740-6d73dc3f4831/go.mod h1:4nPqRP4fhjxQobP7JnSHrgcQ5mQhnk9IH9TzfJg8g6o=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221031101937-e8df2982891d h1:UVVgqRCTrlzXNNHrkhLRQIy5lbfxVK9eHuN6d58RHps=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221031101937-e8df2982891d/go.mod h1:4nPqRP4fhjxQobP7JnSHrgcQ5mQhnk9IH9TzfJg8g6o=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=

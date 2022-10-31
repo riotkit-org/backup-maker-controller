@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/record"
+	"strings"
 )
 
 func CreateOrUpdate(
@@ -52,7 +53,18 @@ func CreateOrUpdate(
 
 	// else - if found, UPDATE
 	if _, updateErr := c.Update(ctx, obj, v1.UpdateOptions{}); updateErr != nil {
-		return errors.Wrap(updateErr, "cannot update object in API")
+		if strings.Contains(updateErr.Error(), "is immutable") {
+			delErr := c.Delete(ctx, obj.GetName(), v1.DeleteOptions{})
+			if delErr != nil {
+				return errors.Wrap(delErr, "cannot delete object for recreation on immutability conflict")
+			}
+			// retry
+			if _, updateErr := c.Create(ctx, obj, v1.CreateOptions{}); updateErr != nil {
+				return errors.Wrap(updateErr, "cannot update object in API (retried)")
+			}
+		} else {
+			return errors.Wrap(updateErr, "cannot update object in API")
+		}
 	}
 	recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Updating %s/%s, named %s/%s", apiVersion, kind, obj.GetNamespace(), obj.GetName()))
 	return nil

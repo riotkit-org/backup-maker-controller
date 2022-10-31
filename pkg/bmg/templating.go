@@ -57,6 +57,9 @@ func RenderKubernetesResourcesFor(backup aggregates.Renderable) ([]unstructured.
 	}
 
 	// Run BMG to generate YAML manifests
+	if err := generate.ExtractRequiredResources(); err != nil {
+		return []unstructured.Unstructured{}, errors.Wrap(err, "cannot populate ~/.bm with templates")
+	}
 	cmd := generate.SnippetGenerationCommand{
 		Template:       backup.GetTemplate().Name,
 		DefinitionFile: definitionPath,
@@ -120,14 +123,17 @@ func readRenderedManifests(manifestPath string, kindsToRender []v1.GroupVersionK
 		if len(kindsToRender) > 0 {
 			gvk := obj.GroupVersionKind()
 			found := false
+			logrus.Debugf("Current kind: %v", gvk.String())
 
 			for _, search := range kindsToRender {
+				logrus.Debugf("Checking: %v", search.String())
 				if gvk.String() == search.String() {
 					found = true
 					break
 				}
 			}
-			if found {
+			if !found {
+				logrus.Debugf("Skipping not matching the filter: %v", gvk.String())
 				continue
 			}
 		}
@@ -155,24 +161,26 @@ func writeDefinition(backup *aggregates.ScheduledBackupAggregate, writeToPath st
 
 	// each entry from Kubernetes secret convert into a YAML value
 	// by converting a dotted path into a map
-	if len(backup.VarsListSecret.Data) > 0 {
+	if len(backup.VarsListSecret.Data) > 0 || len(backup.AdditionalVarsList) > 0 {
 		logrus.Debugf("Copying vars from referenced secret")
-		for path, value := range backup.VarsListSecret.Data {
 
-			// if only specific keys should be used from the secret, then the rest should be skipped
-			if len(backup.Spec.VarsSecretRef.ImportOnlyKeys) > 0 {
-				if !contains(backup.Spec.VarsSecretRef.ImportOnlyKeys, path) {
-					continue
+		for sourceNum, source := range []map[string][]byte{backup.AdditionalVarsList, backup.VarsListSecret.Data} {
+			for path, value := range source {
+				// if only specific keys should be used from the secret, then the rest should be skipped
+				if sourceNum == 1 && len(backup.Spec.VarsSecretRef.ImportOnlyKeys) > 0 {
+					if !contains(backup.Spec.VarsSecretRef.ImportOnlyKeys, path) {
+						continue
+					}
 				}
-			}
 
-			logrus.Debugf("Setting '%s' -> '%v'", path, value)
-			expression, err := jp.ParseString("$." + path)
-			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
-			}
-			if setErr := expression.Set(vars, string(value)); setErr != nil {
-				return errors.Wrap(err, fmt.Sprintf("cannot merge value from Secret into the vars, name: '%s'", path))
+				logrus.Debugf("Setting '%s' -> '%v'", path, value)
+				expression, err := jp.ParseString("$." + path)
+				if err != nil {
+					return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
+				}
+				if setErr := expression.Set(vars, string(value)); setErr != nil {
+					return errors.Wrap(err, fmt.Sprintf("cannot merge value from Secret into the vars, name: '%s'", path))
+				}
 			}
 		}
 	}

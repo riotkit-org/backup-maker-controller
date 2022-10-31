@@ -58,7 +58,6 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 	if err != nil {
 		return &aggregates.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
 	}
-	// todo: immutable - do not process twice
 	scheduledBackup, err := r.Fetcher.FetchScheduledBackup(ctx, ctrl.Request{NamespacedName: types.NamespacedName{
 		Name:      requestedAction.Spec.ScheduledBackupRef.Name,
 		Namespace: requestedAction.Namespace,
@@ -70,6 +69,7 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 	aggregate, _, hydrateErr := f.CreateRequestedBackupActionAggregate(
 		ctx, requestedAction, scheduledBackup,
 	)
+	aggregate.Scheduled.AdditionalVarsList = make(map[string][]byte)
 	if hydrateErr != nil {
 		return &aggregates.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
 	}
@@ -91,23 +91,26 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 	}
 
 	if aggregate.WasAlreadyProcessed() {
-		// todo: emit event
+		r.Recorder.Event(aggregate.RequestedBackupAction, "Normal", "Unchanged", "Successfully reconciled, action already performed, cannot do it once more")
 		return ctrl.Result{}, nil
 	}
 
+	aggregate.SetTargetKindType("Job")
+
 	// 2. Template & Create selected resources (only `kind: Job` type resources. The rest like Secrets and ConfigMaps we expect will be there already, created by ScheduledBackup)
 	if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
-		r.updateObject(ctx, aggregate, metav1.Condition{
+		r.updateObjectStatus(ctx, aggregate, metav1.Condition{
 			Status:  "False",
 			Message: fmt.Sprintf("Cannot find required dependencies: %s", applyErr.Error()),
 		})
 		r.Recorder.Event(aggregate.RequestedBackupAction, "Warning", "ErrorOccurred", applyErr.Error())
-		return ctrl.Result{RequeueAfter: time.Second * 15}, applyErr
+		return ctrl.Result{RequeueAfter: time.Second * 30}, applyErr
 	}
 
 	// 3. Update - mark as processed, update status and send notification event
 	aggregate.MarkAsProcessed()
-	r.updateObject(ctx, aggregate, metav1.Condition{
+
+	r.updateObjectStatus(ctx, aggregate, metav1.Condition{
 		Status:  "True",
 		Message: "Successfully templated and applied",
 	})
@@ -115,14 +118,15 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 	return ctrl.Result{}, nil
 }
 
-// updateObject is updating the .status field
-func (r *RequestedBackupActionReconciler) updateObject(ctx context.Context, aggregate *aggregates.RequestedBackupActionAggregate, condition metav1.Condition) {
+// updateObjectStatus is updating the .status field
+func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context, aggregate *aggregates.RequestedBackupActionAggregate, condition metav1.Condition) {
 	updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Fetch a fresh object to avoid: "the object has been modified; please apply your changes to the latest version and try again"
-		res, getErr := r.BRClient.ScheduledBackups(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
+		res, getErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
 		if getErr != nil {
 			return getErr
 		}
+		res.Status = aggregate.Status
 
 		// Update condition
 		condition.Reason = "SpecWasUpdated"
@@ -131,7 +135,7 @@ func (r *RequestedBackupActionReconciler) updateObject(ctx context.Context, aggr
 		meta.SetStatusCondition(&res.Status.Conditions, condition)
 
 		// Update object's status field
-		_, updateErr := r.BRClient.ScheduledBackups(aggregate.Namespace).UpdateStatus(ctx, res, metav1.UpdateOptions{})
+		_, updateErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).UpdateStatus(ctx, res, metav1.UpdateOptions{})
 		return updateErr
 	})
 	if updateErr != nil {

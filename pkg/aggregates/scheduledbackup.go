@@ -6,14 +6,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type AdditionalVarsList map[string][]byte
+
 // ScheduledBackupAggregate is aggregating already hydrated (fetched from cache/cluster) objects all together
 type ScheduledBackupAggregate struct {
 	*v1alpha1.ScheduledBackup
 
-	Template       *v1alpha1.ClusterBackupProcedureTemplate
-	GPGSecret      *v1.Secret
-	TokenSecret    *v1.Secret
-	VarsListSecret *v1.Secret
+	Template           *v1alpha1.ClusterBackupProcedureTemplate
+	GPGSecret          *v1.Secret
+	TokenSecret        *v1.Secret
+	VarsListSecret     *v1.Secret
+	AdditionalVarsList AdditionalVarsList
 }
 
 func (sb ScheduledBackupAggregate) AcceptedResourceTypes() []metav1.GroupVersionKind {

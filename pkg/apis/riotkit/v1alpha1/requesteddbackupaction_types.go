@@ -34,7 +34,8 @@ type RequestedBackupActionSpec struct {
 
 // RequestedBackupActionStatus defines the observed state of RequestedBackupAction
 type RequestedBackupActionStatus struct {
-	Processed bool `json:"processed"`
+	Processed  bool               `json:"processed"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +genclient
