@@ -1,0 +1,26 @@
+image:
+    repository: ghcr.io/riotkit-org/backup-maker-operator
+    tag: latest
+    pullPolicy: Always
+
+
+replicas: 1
+resources: {}
+installCRD: true
+terminationGracePeriodSeconds: 10
+livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+
+readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+        type: RuntimeDefault
+
+serviceAccount:
+    name: backup-maker-operator
+    create: true

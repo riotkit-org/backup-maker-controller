@@ -1,0 +1,94 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    name: {{ include "controller.fullname" . }}-manage-own-resources
+    labels:
+        {{- include "controller.labels" . | nindent 8 }}
+rules:
+- resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  apiGroups:
+      - ""
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - clusterbackupproceduretemplates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - requestedbackupactions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - requestedbackupactions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - requestedbackupactions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - scheduledbackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - scheduledbackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - riotkit.org
+  resources:
+  - scheduledbackups/status
+  verbs:
+  - get
+  - patch
+  - update

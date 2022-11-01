@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ include "controller.fullname" . }}
+    labels:
+        app: {{ include "controller.fullname" . }}
+        {{- include "controller.labels" . | nindent 8 }}
+spec:
+    selector:
+        matchLabels:
+            app: {{ include "controller.fullname" . }}
+    replicas: {{ $.Values.replicas }}
+    template:
+        metadata:
+            annotations:
+                kubectl.kubernetes.io/default-container: manager
+            labels:
+                app: {{ include "controller.fullname" . }}
+        spec:
+            serviceAccountName: {{ $.Values.serviceAccount.name }}
+            terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+            containers:
+                - name: manager
+                  command:
+                      - /manager
+                  {{ if gt (int $.Values.replicas) 1 }}
+                  args:
+                      - --leader-elect
+                  {{ end }}
+                  imagePullPolicy: {{ $.Values.image.pullPolicy }}
+                  image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop:
+                              - "ALL"
+                  livenessProbe:
+                      httpGet:
+                          path: /healthz
+                          port: 8081
+                      {{- toYaml $.Values.livenessProbe | nindent 22 }}
+                  readinessProbe:
+                      httpGet:
+                          path: /readyz
+                          port: 8081
+                      {{- toYaml $.Values.readinessProbe | nindent 22 }}
+                  resources:
+                      {{- toYaml $.Values.resources | nindent 22 }}
+            securityContext:
+                {{- with $.Values.securityContext }}
+                    {{- toYaml . | nindent 16 }}
+                {{- end }}

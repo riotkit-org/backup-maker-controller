@@ -1,0 +1,71 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    creationTimestamp: null
+    name: {{ include "controller.fullname" . }}-manage-backup-resources
+    labels:
+        {{- include "controller.labels" . | nindent 8 }}
+rules:
+    - resources:
+          - events
+      verbs:
+          - get
+          - list
+          - update
+          - create
+          - patch
+      apiGroups:
+          - ""
+
+    - resources:
+          - secrets
+          - pods
+          - configmaps
+      verbs:
+          - get
+          - list
+          - watch
+          - update
+          - create
+      apiGroups:
+          - ""
+
+    - resources:
+          - jobs
+          - cronjobs
+      verbs:
+          - get
+          - list
+          - watch
+          - update
+          - create
+      apiGroups:
+          - "batch"
+
+    # Argo Workflows integration - run backup/restore as a workflow
+    - resources:
+          - workflows
+      verbs:
+          - get
+          - list
+          - watch
+          - update
+          - create
+      apiGroups:
+          - "argoproj.io"
+
+    # Tekton Pipelines integration - run backup/restore as a pipeline
+    - resources:
+          - pipelines
+          - pipelineruns
+          - tasks
+          - taskruns
+      verbs:
+          - get
+          - list
+          - watch
+          - update
+          - create
+      apiGroups:
+          - "tekton.dev"

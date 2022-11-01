@@ -47,7 +47,7 @@ ifeq ($(USE_IMAGE_DIGESTS), true)
 endif
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= ghcr.io/riotkit-org/backup-maker-operator:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.2
 
@@ -116,7 +116,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
+docker-build: ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
@@ -168,6 +168,15 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
 CONTROLLER_TOOLS_VERSION ?= v0.9.2
+
+.PHONY: helm
+helm:
+	@for f in $$(ls ./config/crd/bases); do \
+		echo -e "{{ if \$$.Values.installCRD }}\\n$$(cat ./config/crd/bases/$$f)\\n{{ end }}" > helm/templates/$$f; \
+	done
+	cp ./config/rbac/*_editor_role.yaml helm/templates/
+	cp ./config/rbac/*_viewer_role.yaml helm/templates/
+	role=$$(cat ./config/rbac/role.yaml); echo "$${role/'name: manager-role'/'name: backup-maker-operator-role'}" > helm/templates/controller-role.yaml
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -240,3 +249,17 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+
+## testing
+
+k3d:
+	(docker ps | grep k3d-bm-server-0 > /dev/null 2>&1) || k3d cluster create bm --registry-create bm-registry:0.0.0.0:5000
+	k3d kubeconfig merge bm
+
+k3d-install:
+	export KUBECONFIG=~/.k3d/kubeconfig-bm.yaml
+	cd helm && make move-image-to-registry install
+	kubectl apply -f examples -n default
+
+k3d-all: docker-build k3d k3d-install

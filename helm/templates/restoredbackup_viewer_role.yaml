@@ -1,0 +1,20 @@
+# permissions for end users to view restoredbackups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: restoredbackup-viewer-role
+rules:
+- apiGroups:
+  - riotkit.org
+  resources:
+  - restoredbackups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - riotkit.org
+  resources:
+  - restoredbackups/status
+  verbs:
+  - get

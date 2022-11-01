@@ -1,0 +1,11 @@
+---
+apiVersion: riotkit.org/v1alpha1
+kind: RequestedBackupAction
+metadata:
+    generateName: backup-
+    namespace: default
+spec:
+    action: backup
+    scheduledBackupRef:
+        name: app1
+    #targetVersion: v1
