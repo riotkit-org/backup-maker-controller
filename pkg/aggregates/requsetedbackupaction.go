@@ -3,6 +3,7 @@ package aggregates
 import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // RequestedBackupActionAggregate is aggregating already hydrated (fetched from cache/cluster) objects all together
@@ -63,11 +64,20 @@ func (a *RequestedBackupActionAggregate) SetTargetKindType(name string) {
 	a.Scheduled.AdditionalVarsList["HelmValues.kindType"] = []byte(name)
 }
 
+func (a RequestedBackupActionAggregate) GetObjectForOwnerReference() KubernetesResource {
+	return a.RequestedBackupAction
+}
+
 func NewRequestedBackupActionAggregate(action *v1alpha1.RequestedBackupAction, scheduled *ScheduledBackupAggregate) *RequestedBackupActionAggregate {
 	aggregate := RequestedBackupActionAggregate{}
 	aggregate.RequestedBackupAction = action
 	aggregate.Scheduled = scheduled
 	aggregate.Scheduled.AdditionalVarsList = make(map[string][]byte)
+	aggregate.RequestedBackupAction.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "riotkit.org",
+		Version: "v1alpha1",
+		Kind:    "RequestedBackupAction",
+	})
 
 	targetKind := "Job"
 	if action.Spec.KindType != "" {

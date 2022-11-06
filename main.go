@@ -23,7 +23,6 @@ import (
 	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -69,9 +68,9 @@ func main() {
 	flag.Parse()
 
 	// turn on debug also globally in the logrus
-	if opts.Level.Enabled(zapcore.DebugLevel) {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
+	//if opts.Level.Enabled(zapcore.DebugLevel) {
+	logrus.SetLevel(logrus.DebugLevel)
+	//}
 
 	// our CRD client
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))

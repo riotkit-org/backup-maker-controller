@@ -38,3 +38,7 @@ func (sb ScheduledBackupAggregate) GetScheduledBackup() *v1alpha1.ScheduledBacku
 func (sb ScheduledBackupAggregate) GetBackupAggregate() *ScheduledBackupAggregate {
 	return &sb
 }
+
+func (sb ScheduledBackupAggregate) GetObjectForOwnerReference() KubernetesResource {
+	return sb.ScheduledBackup
+}

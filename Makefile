@@ -5,6 +5,8 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.0.1
 
+SUDO=
+
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
 # To re-generate a bundle for other specific channels without changing the standard setup, you can:
@@ -254,8 +256,8 @@ catalog-push: ## Push a catalog image.
 ## testing
 
 k3d:
-	(docker ps | grep k3d-bm-server-0 > /dev/null 2>&1) || k3d cluster create bm --registry-create bm-registry:0.0.0.0:5000
-	k3d kubeconfig merge bm
+	(${SUDO} docker ps | grep k3d-bm-server-0 > /dev/null 2>&1) || ${SUDO} k3d cluster create bm --registry-create bm-registry:0.0.0.0:5000
+	${SUDO} k3d kubeconfig merge bm
 
 k3d-dev: k3d skaffold-dev
 skaffold-dev:
@@ -264,4 +266,4 @@ skaffold-dev:
 	export KUBECONFIG=~/.k3d/kubeconfig-bm.yaml
 	kubectl apply -f config/crd/bases
 	kubectl create ns backup-maker-operator || true
-	/usr/local/bin/skaffold dev -n backup-maker-operator --default-repo bm-registry:5000 --tag latest
+	skaffold dev -n backup-maker-operator --default-repo bm-registry:5000 --tag latest

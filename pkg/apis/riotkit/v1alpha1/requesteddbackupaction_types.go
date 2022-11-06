@@ -64,3 +64,11 @@ type RequestedBackupActionList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []RequestedBackupAction `json:"items"`
 }
+
+func (r *RequestedBackupAction) GetTypeMeta() *metav1.TypeMeta {
+	return &r.TypeMeta
+}
+
+func (r *RequestedBackupAction) GetObjectMeta() *metav1.ObjectMeta {
+	return &r.ObjectMeta
+}

@@ -47,14 +47,15 @@ func addOwnerReferences(doc *unstructured.Unstructured, backup aggregates.Render
 		doc.Object["metadata"] = make(map[string]interface{}, 32)
 	}
 
+	owner := backup.GetObjectForOwnerReference()
 	metadata := doc.Object["metadata"].(map[string]interface{})
 	metadata["ownerReferences"] = []map[string]interface{}{
 		{
-			"apiVersion": backup.GetScheduledBackup().APIVersion,
-			"kind":       backup.GetScheduledBackup().Kind,
-			"controller": true,
-			"name":       backup.GetScheduledBackup().Name,
-			"uid":        backup.GetScheduledBackup().UID,
+			"apiVersion": owner.GetTypeMeta().APIVersion,
+			"kind":       owner.GetTypeMeta().Kind,
+			"name":       owner.GetObjectMeta().Name,
+			"uid":        owner.GetObjectMeta().UID,
 		},
 	}
+	logrus.Debugf("Attaching ownerReferences = %v", metadata["ownerReferences"])
 }

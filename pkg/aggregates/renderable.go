@@ -11,4 +11,10 @@ type Renderable interface {
 	GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate
 	GetScheduledBackup() *v1alpha1.ScheduledBackup
 	GetBackupAggregate() *ScheduledBackupAggregate
+	GetObjectForOwnerReference() KubernetesResource
+}
+
+type KubernetesResource interface {
+	GetTypeMeta() *v1.TypeMeta
+	GetObjectMeta() *v1.ObjectMeta
 }

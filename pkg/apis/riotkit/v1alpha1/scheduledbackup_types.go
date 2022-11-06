@@ -122,6 +122,14 @@ func (in *ScheduledBackup) IsBeingReconciledAlready() bool {
 	return false
 }
 
+func (in *ScheduledBackup) GetTypeMeta() *metav1.TypeMeta {
+	return &in.TypeMeta
+}
+
+func (in *ScheduledBackup) GetObjectMeta() *metav1.ObjectMeta {
+	return &in.ObjectMeta
+}
+
 // +kubebuilder:object:root=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
