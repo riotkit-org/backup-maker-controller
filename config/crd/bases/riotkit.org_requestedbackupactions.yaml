@@ -41,6 +41,8 @@ spec:
                 - backup
                 - restore
                 type: string
+              kindType:
+                type: string
               scheduledBackupRef:
                 properties:
                   name:
@@ -52,6 +54,7 @@ spec:
                 type: string
             required:
             - action
+            - kindType
             - scheduledBackupRef
             type: object
           status:

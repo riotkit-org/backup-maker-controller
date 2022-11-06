@@ -22,6 +22,8 @@ import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"github.com/sirupsen/logrus"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -65,6 +67,11 @@ func main() {
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+
+	// turn on debug also globally in the logrus
+	if opts.Level.Enabled(zapcore.DebugLevel) {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 
 	// our CRD client
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
@@ -113,7 +120,7 @@ func main() {
 		BRClient:  brClient,
 		RestCfg:   kubeconfig,
 		DynClient: dynClient,
-		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache()},
+		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache(), Client: brClient},
 		Recorder:  recorder,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ScheduledBackup")
@@ -126,7 +133,7 @@ func main() {
 		BRClient:  brClient,
 		DynClient: dynClient,
 		RestCfg:   kubeconfig,
-		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache()},
+		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache(), Client: brClient},
 		Recorder:  recorder,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RequestedBackupAction")

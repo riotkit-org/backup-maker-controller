@@ -5,6 +5,7 @@ metadata:
     generateName: backup-
     namespace: default
 spec:
+    kindType: Job
     action: backup
     scheduledBackupRef:
         name: app1

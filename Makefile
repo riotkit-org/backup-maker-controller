@@ -257,9 +257,11 @@ k3d:
 	(docker ps | grep k3d-bm-server-0 > /dev/null 2>&1) || k3d cluster create bm --registry-create bm-registry:0.0.0.0:5000
 	k3d kubeconfig merge bm
 
-k3d-install:
-	export KUBECONFIG=~/.k3d/kubeconfig-bm.yaml
-	cd helm && make move-image-to-registry install
-	kubectl apply -f examples -n default
+k3d-dev: k3d skaffold-dev
+skaffold-dev:
+	cat /etc/hosts | grep "bm-registry" > /dev/null || (sudo /bin/bash -c "echo '127.0.0.1 bm-registry' >> /etc/hosts")
 
-k3d-all: docker-build k3d k3d-install
+	export KUBECONFIG=~/.k3d/kubeconfig-bm.yaml
+	kubectl apply -f config/crd/bases
+	kubectl create ns backup-maker-operator || true
+	/usr/local/bin/skaffold dev -n backup-maker-operator --default-repo bm-registry:5000 --tag latest

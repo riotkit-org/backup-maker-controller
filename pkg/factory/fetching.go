@@ -3,7 +3,9 @@ package factory
 import (
 	"context"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -11,7 +13,8 @@ import (
 
 // CachedFetcher is fetching objects collected by the controller-runtime
 type CachedFetcher struct {
-	Cache cache.Cache
+	Cache  cache.Cache
+	Client v1alpha1.RiotkitV1alpha1Interface
 }
 
 // FetchScheduledBackup is fetching ScheduledBackup object from the cache
@@ -23,9 +26,8 @@ func (r *CachedFetcher) FetchScheduledBackup(ctx context.Context, req ctrl.Reque
 
 // FetchRequestedBackupAction is fetching ScheduledBackup object from the cache
 func (r *CachedFetcher) FetchRequestedBackupAction(ctx context.Context, req ctrl.Request) (*riotkitorgv1alpha1.RequestedBackupAction, error) {
-	backup := riotkitorgv1alpha1.RequestedBackupAction{}
-	getErr := r.Cache.Get(ctx, client.ObjectKey{Name: req.Name, Namespace: req.Namespace}, &backup)
-	return &backup, getErr
+	backup, getErr := r.Client.RequestedBackupActions(req.Namespace).Get(ctx, req.Name, metav1.GetOptions{})
+	return backup, getErr
 }
 
 // fetchTemplate is fetching a template from cache

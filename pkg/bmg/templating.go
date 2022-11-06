@@ -121,13 +121,15 @@ func readRenderedManifests(manifestPath string, kindsToRender []v1.GroupVersionK
 
 		// Optionally: We can be rendering only selected types of objects, e.g. only "kind: Job"
 		if len(kindsToRender) > 0 {
+			logrus.Debug("Going to use a filter to keep only selected types of resources")
+
 			gvk := obj.GroupVersionKind()
 			found := false
-			logrus.Debugf("Current kind: %v", gvk.String())
+			logrus.Debugf("Current kind: %v, allowed kinds: %v", gvk.String(), kindsToRender)
 
 			for _, search := range kindsToRender {
-				logrus.Debugf("Checking: %v", search.String())
 				if gvk.String() == search.String() {
+					logrus.Debug("Matched.")
 					found = true
 					break
 				}
@@ -159,6 +161,7 @@ func writeDefinition(backup *aggregates.ScheduledBackupAggregate, writeToPath st
 		return errors.Wrap(err, "cannot parse .spec.vars as YAML")
 	}
 
+	logrus.Debugf("backup.AdditionalVarsList = %v", backup.AdditionalVarsList)
 	// each entry from Kubernetes secret convert into a YAML value
 	// by converting a dotted path into a map
 	if len(backup.VarsListSecret.Data) > 0 || len(backup.AdditionalVarsList) > 0 {
@@ -173,7 +176,7 @@ func writeDefinition(backup *aggregates.ScheduledBackupAggregate, writeToPath st
 					}
 				}
 
-				logrus.Debugf("Setting '%s' -> '%v'", path, value)
+				logrus.Debugf("Setting '%s' -> '%v'", path, string(value))
 				expression, err := jp.ParseString("$." + path)
 				if err != nil {
 					return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
@@ -185,8 +188,9 @@ func writeDefinition(backup *aggregates.ScheduledBackupAggregate, writeToPath st
 		}
 	}
 
-	logrus.Debugf("Serializing definition.yaml")
+	logrus.Debug("Serializing definition.yaml")
 	asYaml, marshalingErr := yaml.Marshal(vars)
+	logrus.Debug(string(asYaml))
 	if marshalingErr != nil {
 		return errors.Wrap(marshalingErr, "cannot serialize vars to YAML as a definition.yaml")
 	}

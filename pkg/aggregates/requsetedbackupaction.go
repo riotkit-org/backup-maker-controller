@@ -62,3 +62,18 @@ func (a RequestedBackupActionAggregate) GetBackupAggregate() *ScheduledBackupAgg
 func (a *RequestedBackupActionAggregate) SetTargetKindType(name string) {
 	a.Scheduled.AdditionalVarsList["HelmValues.kindType"] = []byte(name)
 }
+
+func NewRequestedBackupActionAggregate(action *v1alpha1.RequestedBackupAction, scheduled *ScheduledBackupAggregate) *RequestedBackupActionAggregate {
+	aggregate := RequestedBackupActionAggregate{}
+	aggregate.RequestedBackupAction = action
+	aggregate.Scheduled = scheduled
+	aggregate.Scheduled.AdditionalVarsList = make(map[string][]byte)
+
+	targetKind := "Job"
+	if action.Spec.KindType != "" {
+		targetKind = action.Spec.KindType
+	}
+	aggregate.SetTargetKindType(targetKind)
+
+	return &aggregate
+}

@@ -25,6 +25,7 @@ import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/bmg"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -33,6 +34,8 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -69,7 +72,6 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 	aggregate, _, hydrateErr := f.CreateRequestedBackupActionAggregate(
 		ctx, requestedAction, scheduledBackup,
 	)
-	aggregate.Scheduled.AdditionalVarsList = make(map[string][]byte)
 	if hydrateErr != nil {
 		return &aggregates.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
 	}
@@ -84,18 +86,21 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
+	// todo: if the resource was deleted - then cancel processing
+	logrus.Debugf("Processing %s/%s", req.Name, req.Namespace)
+
 	// 1. Fetch all required objects
 	aggregate, ctrlResult, err := r.fetchAggregate(ctx, logger, req)
 	if err != nil {
 		return ctrlResult, err
 	}
 
+	logrus.Debugf("Fetched aggregate .status = %v, .resourceVersion = %v", aggregate.RequestedBackupAction.Status, aggregate.RequestedBackupAction.ResourceVersion)
+
 	if aggregate.WasAlreadyProcessed() {
 		r.Recorder.Event(aggregate.RequestedBackupAction, "Normal", "Unchanged", "Successfully reconciled, action already performed, cannot do it once more")
 		return ctrl.Result{}, nil
 	}
-
-	aggregate.SetTargetKindType("Job")
 
 	// 2. Template & Create selected resources (only `kind: Job` type resources. The rest like Secrets and ConfigMaps we expect will be there already, created by ScheduledBackup)
 	if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
@@ -108,6 +113,7 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 	}
 
 	// 3. Update - mark as processed, update status and send notification event
+	logrus.Debug("Marking resource as processed")
 	aggregate.MarkAsProcessed()
 
 	r.updateObjectStatus(ctx, aggregate, metav1.Condition{
@@ -126,16 +132,19 @@ func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context
 		if getErr != nil {
 			return getErr
 		}
-		res.Status = aggregate.Status
+		res.Status = aggregate.RequestedBackupAction.Status
 
 		// Update condition
 		condition.Reason = "SpecWasUpdated"
 		condition.Type = "BackupObjectsInstallation"
 		condition.ObservedGeneration = res.Generation
 		meta.SetStatusCondition(&res.Status.Conditions, condition)
+		logrus.Debugf("Setting condition: %v", condition)
 
 		// Update object's status field
+		logrus.Debugf("Saving .status = %v", res.Status)
 		_, updateErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).UpdateStatus(ctx, res, metav1.UpdateOptions{})
+		logrus.Debugf("Status field updated")
 		return updateErr
 	})
 	if updateErr != nil {
@@ -147,5 +156,10 @@ func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context
 func (r *RequestedBackupActionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&riotkitorgv1alpha1.RequestedBackupAction{}).
+		WithEventFilter(predicate.Funcs{
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				return false
+			},
+		}).
 		Complete(r)
 }

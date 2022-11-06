@@ -30,6 +30,9 @@ type RequestedBackupActionSpec struct {
 	Action             string        `json:"action"`
 	TargetVersion      string        `json:"targetVersion,omitempty"` // can be empty, when action = "backup"
 	ScheduledBackupRef BackupRefSpec `json:"scheduledBackupRef"`
+
+	// +kubebuilder:default:=Job
+	KindType string `json:"kindType"`
 }
 
 // RequestedBackupActionStatus defines the observed state of RequestedBackupAction
@@ -47,8 +50,6 @@ type RequestedBackupActionStatus struct {
 type RequestedBackupAction struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// todo: make .spec immutable
 
 	Spec   RequestedBackupActionSpec   `json:"spec,omitempty"`
 	Status RequestedBackupActionStatus `json:"status,omitempty"`
