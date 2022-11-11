@@ -17,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"time"
 )
 
 type JobsManagedByRequestedBackupActionObserver struct {
@@ -39,22 +38,7 @@ func (r *JobsManagedByRequestedBackupActionObserver) Reconcile(ctx context.Conte
 
 	// Collect the report about all managed resources in our context
 	ownedReferences := aggregate.GetReferencesOfOwnedObjects()
-	report := make([]riotkitorgv1alpha1.JobHealthStatus, 0)
-	var healthy = true
-	for _, resource := range ownedReferences {
-		status, err := r.Integrations.GetScheduledJobHealthStatus(ctx, resource.GetGVK(), resource.TrackingId, req.Namespace)
-		logrus.Debugf("JobStatus = %v, err = %v", status, err)
-		if err != nil {
-			if err.Error() == integration.ErrorUnrecognizedResourceType {
-				continue
-			}
-			return ctrl.Result{RequeueAfter: time.Second * 30}, err
-		}
-		report = append(report, status)
-		if status.Failed {
-			healthy = false
-		}
-	}
+	report, healthy, err := createOwnedReferencesHealthReport(ctx, ownedReferences, r.Integrations, req.Namespace)
 
 	// Update the status
 	r.updateStatus(ctx, aggregate, report, healthy)
