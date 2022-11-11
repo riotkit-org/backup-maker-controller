@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -121,6 +122,11 @@ func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context
 		condition.ObservedGeneration = res.Generation
 		meta.SetStatusCondition(&res.Status.Conditions, condition)
 		logrus.Debugf("Setting condition: %v", condition)
+
+		// Update main status
+		if strings.ToLower(string(condition.Status)) != "true" {
+			res.Status.Healthy = false
+		}
 
 		// Update object's status field
 		logrus.Debugf("Saving .status = %v", res.Status)
