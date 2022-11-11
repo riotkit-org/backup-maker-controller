@@ -132,6 +132,39 @@ spec:
           status:
             description: ScheduledBackupStatus defines the observed state of ScheduledBackup
             properties:
+              childrenResourcesHealth:
+                items:
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    failed:
+                      type: boolean
+                    kind:
+                      description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                      type: string
+                    message:
+                      type: string
+                    running:
+                      type: boolean
+                    succeeded:
+                      type: boolean
+                    trackingId:
+                      description: We cannot use name and UID, because those are unknown,
+                        when a resource is using "generateName" Instead we will be
+                        using a label and a unique ID TrackingId is the execution
+                        id. Every created object is getting its unique id
+                      type: string
+                  required:
+                  - apiVersion
+                  - failed
+                  - kind
+                  - message
+                  - running
+                  - succeeded
+                  - trackingId
+                  type: object
+                type: array
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
@@ -202,6 +235,30 @@ spec:
                 type: array
               lastAppliedSpecHash:
                 type: string
+              ownedReferences:
+                items:
+                  properties:
+                    apiVersion:
+                      description: API version of the referent.
+                      type: string
+                    kind:
+                      description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                      type: string
+                    trackingId:
+                      description: We cannot use name and UID, because those are unknown,
+                        when a resource is using "generateName" Instead we will be
+                        using a label and a unique ID TrackingId is the execution
+                        id. Every created object is getting its unique id
+                      type: string
+                  required:
+                  - apiVersion
+                  - kind
+                  - trackingId
+                  type: object
+                type: array
+            required:
+            - childrenResourcesHealth
+            - ownedReferences
             type: object
         type: object
     served: true

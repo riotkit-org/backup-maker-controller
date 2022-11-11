@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/ohler55/ojg/jp"
 	"github.com/pkg/errors"
-	"github.com/riotkit-org/backup-maker-operator/pkg/aggregates"
 	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/riotkit-org/br-backup-maker/generate"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -18,7 +18,7 @@ import (
 )
 
 // RenderKubernetesResourcesFor is rendering Kubernetes resources like CronJob, Job, Secret, ConfigMap using Backup Maker Generator (BMG), which is using Helm under the hood
-func RenderKubernetesResourcesFor(backup aggregates.Renderable) ([]unstructured.Unstructured, error) {
+func RenderKubernetesResourcesFor(backup domain.Renderable) ([]unstructured.Unstructured, error) {
 	operation := backup.GetOperation()
 
 	// Create a temporary workspace directory
@@ -146,7 +146,7 @@ func readRenderedManifests(manifestPath string, kindsToRender []v1.GroupVersionK
 }
 
 // writeGPGKey is extracting a proper GPG key from Kubernetes Secret and writing down to the temporary file
-func writeGPGKey(backup *aggregates.ScheduledBackupAggregate, writeToPath string, operation string) error {
+func writeGPGKey(backup *domain.ScheduledBackupAggregate, writeToPath string, operation string) error {
 	keyName := backup.Spec.GPGKeySecretRef.PrivateKey
 	if operation == "backup" {
 		keyName = backup.Spec.GPGKeySecretRef.PublicKey
@@ -155,7 +155,7 @@ func writeGPGKey(backup *aggregates.ScheduledBackupAggregate, writeToPath string
 }
 
 // writeDefinition is writing the definition.yaml into the workspace
-func writeDefinition(backup *aggregates.ScheduledBackupAggregate, writeToPath string) error {
+func writeDefinition(backup *domain.ScheduledBackupAggregate, writeToPath string) error {
 	var vars map[string]interface{}
 	if err := yaml.Unmarshal([]byte(backup.Spec.Vars), &vars); err != nil {
 		return errors.Wrap(err, "cannot parse .spec.vars as YAML")

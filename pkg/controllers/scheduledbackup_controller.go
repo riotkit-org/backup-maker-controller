@@ -19,10 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/riotkit-org/backup-maker-operator/pkg/aggregates"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/bmg"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -123,7 +123,7 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 }
 
 // updateObject is updating the .status field
-func (r *ScheduledBackupReconciler) updateObject(ctx context.Context, aggregate *aggregates.ScheduledBackupAggregate, condition metav1.Condition) {
+func (r *ScheduledBackupReconciler) updateObject(ctx context.Context, aggregate *domain.ScheduledBackupAggregate, condition metav1.Condition) {
 	updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Fetch a fresh object to avoid: "the object has been modified; please apply your changes to the latest version and try again"
 		res, getErr := r.BRClient.ScheduledBackups(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
@@ -136,6 +136,7 @@ func (r *ScheduledBackupReconciler) updateObject(ctx context.Context, aggregate 
 		condition.Type = "BackupObjectsInstallation"
 		condition.ObservedGeneration = res.Generation
 		if condition.Status == "True" {
+			// todo: move to domain
 			res.Status.LastAppliedSpecHash = aggregate.Spec.CalculateHash()
 		}
 		meta.SetStatusCondition(&res.Status.Conditions, condition)

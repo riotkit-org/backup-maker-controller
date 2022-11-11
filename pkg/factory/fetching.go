@@ -2,13 +2,17 @@ package factory
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 // CachedFetcher is fetching objects collected by the controller-runtime
@@ -41,4 +45,27 @@ func (r *CachedFetcher) fetchSecret(ctx context.Context, name string, namespace 
 	secret := v1.Secret{}
 	getErr := r.Cache.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, &secret)
 	return &secret, getErr
+}
+
+// FetchRBAAggregate fetches RequestedBackupAction aggregate with all of its dependencies
+func FetchRBAAggregate(ctx context.Context, cf CachedFetcher, c client.Client, logger logr.Logger, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
+	requestedAction, err := cf.FetchRequestedBackupAction(ctx, req)
+	if err != nil {
+		return &domain.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
+	}
+	scheduledBackup, err := cf.FetchScheduledBackup(ctx, ctrl.Request{NamespacedName: types.NamespacedName{
+		Name:      requestedAction.Spec.ScheduledBackupRef.Name,
+		Namespace: requestedAction.Namespace,
+	}})
+	if err != nil {
+		return &domain.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
+	}
+	f := NewFactory(c, cf, logger)
+	aggregate, _, hydrateErr := f.CreateRequestedBackupActionAggregate(
+		ctx, requestedAction, scheduledBackup,
+	)
+	if hydrateErr != nil {
+		return &domain.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
+	}
+	return aggregate, ctrl.Result{}, nil
 }

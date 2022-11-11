@@ -22,6 +22,7 @@ import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"github.com/riotkit-org/backup-maker-operator/pkg/integration"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -103,6 +104,8 @@ func main() {
 	if clErr != nil {
 		panic(clErr.Error())
 	}
+	integrations := integration.NewAllSupportedJobResourceTypes(kubeconfig)
+	fetcher := factory.CachedFetcher{Cache: mgr.GetCache(), Client: brClient}
 
 	if err = (&controllers2.ClusterBackupProcedureTemplateReconciler{
 		Client: mgr.GetClient(),
@@ -132,13 +135,22 @@ func main() {
 		BRClient:  brClient,
 		DynClient: dynClient,
 		RestCfg:   kubeconfig,
-		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache(), Client: brClient},
+		Fetcher:   fetcher,
 		Recorder:  recorder,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RequestedBackupAction")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
+	if err = (&controllers2.ManagedJobObserver{
+		Integrations: &integrations,
+		Fetcher:      fetcher,
+		BRClient:     brClient,
+		Client:       mgr.GetClient(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Job")
+		os.Exit(1)
+	}
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

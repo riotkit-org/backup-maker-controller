@@ -1,9 +1,10 @@
-package aggregates
+package domain
 
 import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type AdditionalVarsList map[string][]byte
@@ -41,4 +42,9 @@ func (sb ScheduledBackupAggregate) GetBackupAggregate() *ScheduledBackupAggregat
 
 func (sb ScheduledBackupAggregate) GetObjectForOwnerReference() KubernetesResource {
 	return sb.ScheduledBackup
+}
+
+// AddOwnedObject is adding a child element
+func (sb *ScheduledBackupAggregate) AddOwnedObject(doc *unstructured.Unstructured) {
+	v1alpha1.AddOwnedObject(&sb.Status.OwnedReferences, doc)
 }

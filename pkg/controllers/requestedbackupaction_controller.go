@@ -20,15 +20,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
-	"github.com/riotkit-org/backup-maker-operator/pkg/aggregates"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/bmg"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
@@ -56,26 +55,8 @@ type RequestedBackupActionReconciler struct {
 	Recorder  record.EventRecorder
 }
 
-func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, logger logr.Logger, req ctrl.Request) (*aggregates.RequestedBackupActionAggregate, ctrl.Result, error) {
-	requestedAction, err := r.Fetcher.FetchRequestedBackupAction(ctx, req)
-	if err != nil {
-		return &aggregates.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
-	}
-	scheduledBackup, err := r.Fetcher.FetchScheduledBackup(ctx, ctrl.Request{NamespacedName: types.NamespacedName{
-		Name:      requestedAction.Spec.ScheduledBackupRef.Name,
-		Namespace: requestedAction.Namespace,
-	}})
-	if err != nil {
-		return &aggregates.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
-	}
-	f := factory.NewFactory(r.Client, r.Fetcher, logger)
-	aggregate, _, hydrateErr := f.CreateRequestedBackupActionAggregate(
-		ctx, requestedAction, scheduledBackup,
-	)
-	if hydrateErr != nil {
-		return &aggregates.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
-	}
-	return aggregate, ctrl.Result{}, nil
+func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, logger logr.Logger, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
+	return factory.FetchRBAAggregate(ctx, r.Fetcher, r.Client, logger, req)
 }
 
 // +kubebuilder:rbac:groups=riotkit.org,resources=requestedbackupactions,verbs=get;list;watch;create;update;patch;delete
@@ -125,7 +106,7 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 }
 
 // updateObjectStatus is updating the .status field
-func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context, aggregate *aggregates.RequestedBackupActionAggregate, condition metav1.Condition) {
+func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context, aggregate *domain.RequestedBackupActionAggregate, condition metav1.Condition) {
 	updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Fetch a fresh object to avoid: "the object has been modified; please apply your changes to the latest version and try again"
 		res, getErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})

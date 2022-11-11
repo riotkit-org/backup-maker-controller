@@ -1,8 +1,9 @@
-package aggregates
+package domain
 
 import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -21,6 +22,11 @@ func (a RequestedBackupActionAggregate) WasAlreadyProcessed() bool {
 	return a.Status.Processed
 }
 
+func (a RequestedBackupActionAggregate) GetReferencesOfOwnedObjects() v1alpha1.ChildrenReferences {
+	return a.RequestedBackupAction.Status.OwnedReferences
+}
+
+// todo: move to integration package
 func (a RequestedBackupActionAggregate) AcceptedResourceTypes() []v1.GroupVersionKind {
 	return []v1.GroupVersionKind{
 		{Group: "batch", Version: "v1", Kind: "Job"},
@@ -66,6 +72,11 @@ func (a *RequestedBackupActionAggregate) SetTargetKindType(name string) {
 
 func (a RequestedBackupActionAggregate) GetObjectForOwnerReference() KubernetesResource {
 	return a.RequestedBackupAction
+}
+
+// AddOwnedObject is adding a child element
+func (a *RequestedBackupActionAggregate) AddOwnedObject(doc *unstructured.Unstructured) {
+	v1alpha1.AddOwnedObject(&a.Status.OwnedReferences, doc)
 }
 
 func NewRequestedBackupActionAggregate(action *v1alpha1.RequestedBackupAction, scheduled *ScheduledBackupAggregate) *RequestedBackupActionAggregate {

@@ -85,8 +85,10 @@ type CronJobSpec struct {
 
 // ScheduledBackupStatus defines the observed state of ScheduledBackup
 type ScheduledBackupStatus struct {
-	LastAppliedSpecHash string             `json:"lastAppliedSpecHash,omitempty"`
-	Conditions          []metav1.Condition `json:"conditions,omitempty"`
+	LastAppliedSpecHash     string             `json:"lastAppliedSpecHash,omitempty"`
+	Conditions              []metav1.Condition `json:"conditions,omitempty"`
+	OwnedReferences         ChildrenReferences `json:"ownedReferences"`
+	ChildrenResourcesHealth []JobHealthStatus  `json:"childrenResourcesHealth"`
 }
 
 // +genclient

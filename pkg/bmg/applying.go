@@ -3,7 +3,8 @@ package bmg
 import (
 	"context"
 	"github.com/pkg/errors"
-	"github.com/riotkit-org/backup-maker-operator/pkg/aggregates"
+	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -12,7 +13,7 @@ import (
 )
 
 // ApplyScheduledBackup is applying objects to the cluster, while adding necessary metadata
-func ApplyScheduledBackup(ctx context.Context, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup aggregates.Renderable) error {
+func ApplyScheduledBackup(ctx context.Context, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup domain.Renderable) error {
 	rendered, renderErr := RenderKubernetesResourcesFor(backup)
 	if renderErr != nil {
 		return errors.Wrap(renderErr, "cannot apply rendered objects to the cluster")
@@ -21,6 +22,7 @@ func ApplyScheduledBackup(ctx context.Context, recorder record.EventRecorder, re
 	// add owner references and namespaces to all objects that this controller creates
 	for _, doc := range rendered {
 		addOwnerReferences(&doc, backup)
+		addChildReferences(&doc, backup)
 		addNamespace(&doc, backup.GetScheduledBackup().Namespace)
 	}
 
@@ -42,7 +44,7 @@ func addNamespace(doc *unstructured.Unstructured, namespace string) {
 	doc.SetNamespace(namespace)
 }
 
-func addOwnerReferences(doc *unstructured.Unstructured, backup aggregates.Renderable) {
+func addOwnerReferences(doc *unstructured.Unstructured, backup domain.Renderable) {
 	if _, exists := doc.Object["metadata"]; !exists {
 		doc.Object["metadata"] = make(map[string]interface{}, 32)
 	}
@@ -58,4 +60,13 @@ func addOwnerReferences(doc *unstructured.Unstructured, backup aggregates.Render
 		},
 	}
 	logrus.Debugf("Attaching ownerReferences = %v", metadata["ownerReferences"])
+}
+
+func addChildReferences(doc *unstructured.Unstructured, backup domain.Renderable) {
+	// mark a resource with an unique identifier in the label
+	v1alpha1.AppendJobIdTo(doc)
+
+	// add that resource to the ChildrenReferences field for the parent, so the parent
+	// could find all of its resources using a previously generated set of labels
+	backup.AddOwnedObject(doc)
 }
