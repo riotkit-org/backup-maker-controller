@@ -142,7 +142,7 @@ func main() {
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
-	if err = (&controllers2.ManagedJobObserver{
+	if err = (&controllers2.JobsManagedByRequestedBackupActionObserver{
 		Integrations: &integrations,
 		Fetcher:      fetcher,
 		BRClient:     brClient,

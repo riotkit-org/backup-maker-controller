@@ -20,14 +20,14 @@ import (
 	"time"
 )
 
-type ManagedJobObserver struct {
+type JobsManagedByRequestedBackupActionObserver struct {
 	Client       client.Client
 	BRClient     v1alpha1.RiotkitV1alpha1Interface
 	Integrations *integration.AllSupportedJobResourceTypes
 	Fetcher      factory.CachedFetcher
 }
 
-func (r *ManagedJobObserver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *JobsManagedByRequestedBackupActionObserver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx) // todo: logrus.WithContext(ctx)
 	logger.Info("Reconciling children")
 
@@ -62,7 +62,7 @@ func (r *ManagedJobObserver) Reconcile(ctx context.Context, req ctrl.Request) (c
 	return ctrl.Result{}, nil
 }
 
-func (r *ManagedJobObserver) updateStatus(ctx context.Context, aggregate *domain.RequestedBackupActionAggregate, report []riotkitorgv1alpha1.JobHealthStatus, healthy bool) {
+func (r *JobsManagedByRequestedBackupActionObserver) updateStatus(ctx context.Context, aggregate *domain.RequestedBackupActionAggregate, report []riotkitorgv1alpha1.JobHealthStatus, healthy bool) {
 	retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		res, getErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
 		if getErr != nil {
@@ -79,7 +79,7 @@ func (r *ManagedJobObserver) updateStatus(ctx context.Context, aggregate *domain
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *ManagedJobObserver) SetupWithManager(mgr ctrl.Manager) error {
+func (r *JobsManagedByRequestedBackupActionObserver) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&riotkitorgv1alpha1.RequestedBackupAction{}).
 		//For(&riotkitorgv1alpha1.ScheduledBackup{}).
