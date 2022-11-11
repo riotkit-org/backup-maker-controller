@@ -19,6 +19,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
+// -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+// RequestedBackupAction is spawning multiple objects, mostly objects creating Pods. Those Pods are performing a Backup or Restore action,
+// and each action has a RESULT - In progress, Failed or Succeeded. This result is collected and applied back to the RequestedBackupAction as an aggregated status.
+// -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 type JobsManagedByRequestedBackupActionObserver struct {
 	Client       client.Client
 	BRClient     v1alpha1.RiotkitV1alpha1Interface
