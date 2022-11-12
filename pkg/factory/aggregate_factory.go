@@ -3,11 +3,11 @@ package factory
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/riotkit-org/backup-maker-operator/pkg/gpg"
+	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,10 +18,10 @@ var ErrorActionRequeue = errors.New("REQUEUE")
 type Factory struct {
 	client.Client
 	fetcher CachedFetcher
-	logger  logr.Logger
+	logger  *logrus.Entry
 }
 
-func NewFactory(client client.Client, fetcher CachedFetcher, logger logr.Logger) *Factory {
+func NewFactory(client client.Client, fetcher CachedFetcher, logger *logrus.Entry) *Factory {
 	return &Factory{Client: client, fetcher: fetcher, logger: logger}
 }
 

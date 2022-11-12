@@ -3,10 +3,10 @@ package factory
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
+	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,7 +48,7 @@ func (r *CachedFetcher) fetchSecret(ctx context.Context, name string, namespace 
 	return &secret, getErr
 }
 
-func FetchSBAggregate(ctx context.Context, cf CachedFetcher, c client.Client, logger logr.Logger, req ctrl.Request) (*domain.ScheduledBackupAggregate, error) {
+func FetchSBAggregate(ctx context.Context, cf CachedFetcher, c client.Client, logger *logrus.Entry, req ctrl.Request) (*domain.ScheduledBackupAggregate, error) {
 	backup, err := cf.FetchScheduledBackup(ctx, req)
 	logger.Info(fmt.Sprintf("Fetching '%s' from '%s' namespace", backup.Name, backup.Namespace))
 	if err != nil {
@@ -62,7 +62,7 @@ func FetchSBAggregate(ctx context.Context, cf CachedFetcher, c client.Client, lo
 }
 
 // FetchRBAAggregate fetches RequestedBackupAction aggregate with all of its dependencies
-func FetchRBAAggregate(ctx context.Context, cf CachedFetcher, c client.Client, logger logr.Logger, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
+func FetchRBAAggregate(ctx context.Context, cf CachedFetcher, c client.Client, logger *logrus.Entry, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
 	requestedAction, err := cf.FetchRequestedBackupAction(ctx, req)
 	if err != nil {
 		return &domain.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err

@@ -38,7 +38,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"time"
 )
 
@@ -61,10 +60,13 @@ type ScheduledBackupReconciler struct {
 
 // Reconcile is the main loop for ScheduledBackup type objects
 func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
+	logger := logrus.WithContext(ctx).WithFields(map[string]interface{}{
+		"name":       req.NamespacedName,
+		"controller": "ScheduledBackupReconciler",
+	})
 
 	// todo: support case, when cron=false. Then do not create CronJob or Job objects. Such case would mean manual triggering of the backup process
-	// todo: backup rotation - basing on the server settings
+	// todo: backup rotation - basing on the server settings?
 
 	//
 	// Fetch reconciled object [ScheduledBackup]
@@ -99,7 +101,7 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			return ctrl.Result{RequeueAfter: time.Minute * 15}, err
 		}
 
-		if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
+		if applyErr := bmg.ApplyScheduledBackup(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
 			r.updateObject(ctx, aggregate, metav1.Condition{
 				Status:  "False",
 				Message: fmt.Sprintf("Cannot template or apply objects to the cluster: %s", applyErr.Error()),
@@ -116,7 +118,7 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		})
 		r.Recorder.Event(backup, "Normal", "Updated", fmt.Sprintf("Successfully reconciled '%s' from '%s' namespace", backup.Name, backup.Namespace))
 	} else {
-		logrus.Infof("Spec not changed for '%s' from '%s' namespace", backup.Name, backup.Namespace)
+		logger.Infof("Spec not changed for '%s' from '%s' namespace", backup.Name, backup.Namespace)
 	}
 
 	return ctrl.Result{}, nil

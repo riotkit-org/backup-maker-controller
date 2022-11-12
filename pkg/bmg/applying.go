@@ -13,15 +13,15 @@ import (
 )
 
 // ApplyScheduledBackup is applying objects to the cluster, while adding necessary metadata
-func ApplyScheduledBackup(ctx context.Context, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup domain.Renderable) error {
-	rendered, renderErr := RenderKubernetesResourcesFor(backup)
+func ApplyScheduledBackup(ctx context.Context, logger *logrus.Entry, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup domain.Renderable) error {
+	rendered, renderErr := RenderKubernetesResourcesFor(logger, backup)
 	if renderErr != nil {
 		return errors.Wrap(renderErr, "cannot apply rendered objects to the cluster")
 	}
 
 	// add owner references and namespaces to all objects that this controller creates
 	for _, doc := range rendered {
-		addOwnerReferences(&doc, backup)
+		addOwnerReferences(logger, &doc, backup)
 		addChildReferences(&doc, backup)
 		addNamespace(&doc, backup.GetScheduledBackup().Namespace)
 	}
@@ -31,7 +31,7 @@ func ApplyScheduledBackup(ctx context.Context, recorder record.EventRecorder, re
 	}
 	for _, doc := range rendered {
 		apiVersion, kind := doc.GroupVersionKind().ToAPIVersionAndKind()
-		logrus.Infof("Applying %s, kind: %s, %s/%s", apiVersion, kind, doc.GetNamespace(), doc.GetName())
+		logger.Infof("Applying %s, kind: %s, %s/%s", apiVersion, kind, doc.GetNamespace(), doc.GetName())
 		if err := CreateOrUpdate(ctx, recorder, dynClient, restCfg, &doc, backup.GetScheduledBackup()); err != nil {
 			return errors.Wrap(err, "cannot apply manifest to the cluster")
 		}
@@ -44,7 +44,7 @@ func addNamespace(doc *unstructured.Unstructured, namespace string) {
 	doc.SetNamespace(namespace)
 }
 
-func addOwnerReferences(doc *unstructured.Unstructured, backup domain.Renderable) {
+func addOwnerReferences(logger *logrus.Entry, doc *unstructured.Unstructured, backup domain.Renderable) {
 	if _, exists := doc.Object["metadata"]; !exists {
 		doc.Object["metadata"] = make(map[string]interface{}, 32)
 	}
@@ -59,11 +59,11 @@ func addOwnerReferences(doc *unstructured.Unstructured, backup domain.Renderable
 			"uid":        owner.GetObjectMeta().UID,
 		},
 	}
-	logrus.Debugf("Attaching ownerReferences = %v", metadata["ownerReferences"])
+	logger.Debugf("Attaching ownerReferences = %v", metadata["ownerReferences"])
 }
 
 func addChildReferences(doc *unstructured.Unstructured, backup domain.Renderable) {
-	// mark a resource with an unique identifier in the label
+	// mark a resource with a unique identifier in the label
 	v1alpha1.AppendJobIdTo(doc)
 
 	// add that resource to the ChildrenReferences field for the parent, so the parent

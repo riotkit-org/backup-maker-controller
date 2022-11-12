@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/bmg"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
@@ -41,7 +40,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // RequestedBackupActionReconciler reconciles a RequestedBackupAction object
@@ -56,7 +54,7 @@ type RequestedBackupActionReconciler struct {
 	Recorder  record.EventRecorder
 }
 
-func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, logger logr.Logger, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
+func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, logger *logrus.Entry, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
 	return factory.FetchRBAAggregate(ctx, r.Fetcher, r.Client, logger, req)
 }
 
@@ -66,10 +64,11 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 
 // Reconcile main loop for RequestedBackupAction controller
 func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
-	// todo: if the resource was deleted - then cancel processing
-	logrus.Debugf("Processing %s/%s", req.Name, req.Namespace)
+	logger := logrus.WithContext(ctx).WithFields(map[string]interface{}{
+		"name":       req.NamespacedName,
+		"controller": "RequestedBackupActionReconciler",
+	})
+	logger.Debugf("Processing %s/%s", req.Name, req.Namespace)
 
 	// 1. Fetch all required objects
 	aggregate, ctrlResult, err := r.fetchAggregate(ctx, logger, req)
@@ -77,7 +76,7 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 		return ctrlResult, err
 	}
 
-	logrus.Debugf("Fetched aggregate .status = %v, .resourceVersion = %v", aggregate.RequestedBackupAction.Status, aggregate.RequestedBackupAction.ResourceVersion)
+	logger.Debugf("Fetched aggregate .status = %v, .resourceVersion = %v", aggregate.RequestedBackupAction.Status, aggregate.RequestedBackupAction.ResourceVersion)
 
 	if aggregate.WasAlreadyProcessed() {
 		r.Recorder.Event(aggregate.RequestedBackupAction, "Normal", "Unchanged", "Successfully reconciled, action already performed, cannot do it once more")
@@ -85,8 +84,8 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 	}
 
 	// 2. Template & Create selected resources (only `kind: Job` type resources. The rest like Secrets and ConfigMaps we expect will be there already, created by ScheduledBackup)
-	if applyErr := bmg.ApplyScheduledBackup(ctx, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
-		r.updateObjectStatus(ctx, aggregate, metav1.Condition{
+	if applyErr := bmg.ApplyScheduledBackup(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
+		r.updateObjectStatus(ctx, logger, aggregate, metav1.Condition{
 			Status:  "False",
 			Message: fmt.Sprintf("Cannot find required dependencies: %s", applyErr.Error()),
 		})
@@ -95,10 +94,10 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 	}
 
 	// 3. Update - mark as processed, update status and send notification event
-	logrus.Debug("Marking resource as processed")
+	logger.Debug("Marking resource as processed")
 	aggregate.MarkAsProcessed()
 
-	r.updateObjectStatus(ctx, aggregate, metav1.Condition{
+	r.updateObjectStatus(ctx, logger, aggregate, metav1.Condition{
 		Status:  "True",
 		Message: "Successfully templated and applied",
 	})
@@ -107,7 +106,7 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 }
 
 // updateObjectStatus is updating the .status field
-func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context, aggregate *domain.RequestedBackupActionAggregate, condition metav1.Condition) {
+func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context, logger *logrus.Entry, aggregate *domain.RequestedBackupActionAggregate, condition metav1.Condition) {
 	updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Fetch a fresh object to avoid: "the object has been modified; please apply your changes to the latest version and try again"
 		res, getErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
@@ -121,7 +120,7 @@ func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context
 		condition.Type = "BackupObjectsInstallation"
 		condition.ObservedGeneration = res.Generation
 		meta.SetStatusCondition(&res.Status.Conditions, condition)
-		logrus.Debugf("Setting condition: %v", condition)
+		logger.Debugf("Setting condition: %v", condition)
 
 		// Update main status
 		if strings.ToLower(string(condition.Status)) != "true" {
@@ -129,9 +128,9 @@ func (r *RequestedBackupActionReconciler) updateObjectStatus(ctx context.Context
 		}
 
 		// Update object's status field
-		logrus.Debugf("Saving .status = %v", res.Status)
+		logger.Debugf("Saving .status = %v", res.Status)
 		_, updateErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).UpdateStatus(ctx, res, metav1.UpdateOptions{})
-		logrus.Debugf("Status field updated")
+		logger.Debugf("Status field updated")
 		return updateErr
 	})
 	if updateErr != nil {

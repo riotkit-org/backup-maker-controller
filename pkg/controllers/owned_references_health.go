@@ -8,7 +8,7 @@ import (
 )
 
 // createOwnedReferencesHealthReport Check health status of all managed backup jobs and put into a single report list
-func createOwnedReferencesHealthReport(ctx context.Context, ownedReferences riotkitorgv1alpha1.ChildrenReferences, integrations *integration.AllSupportedJobResourceTypes, namespace string) ([]riotkitorgv1alpha1.JobHealthStatus, bool, error) {
+func createOwnedReferencesHealthReport(ctx context.Context, ownedReferences riotkitorgv1alpha1.ChildrenReferences, integrations *integration.AllSupportedJobResourceTypes, logger *logrus.Entry, namespace string) ([]riotkitorgv1alpha1.JobHealthStatus, bool, error) {
 	report := make([]riotkitorgv1alpha1.JobHealthStatus, 0)
 	var healthy = true
 
@@ -17,7 +17,7 @@ func createOwnedReferencesHealthReport(ctx context.Context, ownedReferences riot
 
 		// get a health status
 		status, err := integrations.GetScheduledJobHealthStatus(ctx, resource.GetGVK(), resource.TrackingId, namespace)
-		logrus.Debugf("JobStatus = %v, err = %v", status, err)
+		logger.Debugf("JobStatus = %v, err = %v", status, err)
 		if err != nil {
 			// we have to ignore resources like Secrets, ConfigMaps etc.
 			if err.Error() == integration.ErrorUnrecognizedResourceType {

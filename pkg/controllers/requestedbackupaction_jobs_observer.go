@@ -15,7 +15,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
@@ -32,7 +31,10 @@ type JobsManagedByRequestedBackupActionObserver struct {
 }
 
 func (r *JobsManagedByRequestedBackupActionObserver) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx) // todo: logrus.WithContext(ctx)
+	logger := logrus.WithContext(ctx).WithFields(map[string]interface{}{
+		"name":       req.NamespacedName,
+		"controller": "JobsManagedByRequestedBackupActionObserver",
+	})
 	logger.Info("Reconciling children")
 
 	// Fetch and populate the context
@@ -43,15 +45,15 @@ func (r *JobsManagedByRequestedBackupActionObserver) Reconcile(ctx context.Conte
 
 	// Collect the report about all managed resources in our context
 	ownedReferences := aggregate.GetReferencesOfOwnedObjects()
-	report, healthy, err := createOwnedReferencesHealthReport(ctx, ownedReferences, r.Integrations, req.Namespace)
+	report, healthy, err := createOwnedReferencesHealthReport(ctx, ownedReferences, r.Integrations, logger, req.Namespace)
 
 	// Update the status
-	r.updateStatus(ctx, aggregate, report, healthy)
+	r.updateStatus(ctx, aggregate, report, healthy, logger)
 
 	return ctrl.Result{}, nil
 }
 
-func (r *JobsManagedByRequestedBackupActionObserver) updateStatus(ctx context.Context, aggregate *domain.RequestedBackupActionAggregate, report []riotkitorgv1alpha1.JobHealthStatus, healthy bool) {
+func (r *JobsManagedByRequestedBackupActionObserver) updateStatus(ctx context.Context, aggregate *domain.RequestedBackupActionAggregate, report []riotkitorgv1alpha1.JobHealthStatus, healthy bool, logger *logrus.Entry) {
 	retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		res, getErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).Get(ctx, aggregate.Name, metav1.GetOptions{})
 		if getErr != nil {
@@ -62,7 +64,7 @@ func (r *JobsManagedByRequestedBackupActionObserver) updateStatus(ctx context.Co
 		res.Status.Healthy = healthy
 
 		_, updateErr := r.BRClient.RequestedBackupActions(aggregate.Namespace).UpdateStatus(ctx, res, metav1.UpdateOptions{})
-		logrus.Debugf(".status field updated with .ChildrenResourcesHealth and .Healthy")
+		logger.Debugf(".status field updated with .ChildrenResourcesHealth and .Healthy")
 		return updateErr
 	})
 }

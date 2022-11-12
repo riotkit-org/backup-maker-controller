@@ -18,7 +18,7 @@ import (
 )
 
 // RenderKubernetesResourcesFor is rendering Kubernetes resources like CronJob, Job, Secret, ConfigMap using Backup Maker Generator (BMG), which is using Helm under the hood
-func RenderKubernetesResourcesFor(backup domain.Renderable) ([]unstructured.Unstructured, error) {
+func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable) ([]unstructured.Unstructured, error) {
 	operation := backup.GetOperation()
 
 	// Create a temporary workspace directory
@@ -52,7 +52,7 @@ func RenderKubernetesResourcesFor(backup domain.Renderable) ([]unstructured.Unst
 
 	// Write vars into definition.yaml
 	definitionPath := dir + "/definition.yaml"
-	if writeErr := writeDefinition(backup.GetBackupAggregate(), definitionPath); writeErr != nil {
+	if writeErr := writeDefinition(logger, backup.GetBackupAggregate(), definitionPath); writeErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(writeErr, "cannot write definition.yaml to temporary file")
 	}
 
@@ -76,7 +76,7 @@ func RenderKubernetesResourcesFor(backup domain.Renderable) ([]unstructured.Unst
 	if genErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(genErr, "error while generating manifests")
 	}
-	return readRenderedManifests(dir+"/output/"+operation+".yaml", backup.AcceptedResourceTypes())
+	return readRenderedManifests(logger, dir+"/output/"+operation+".yaml", backup.AcceptedResourceTypes())
 }
 
 // writeTemplate is writing the backup/restore procedure template
@@ -92,7 +92,7 @@ func writeTemplate(template *v1alpha1.ClusterBackupProcedureTemplate, operation 
 }
 
 // readRenderedManifests is reading manifests from YAML into []UnstructuredObject
-func readRenderedManifests(manifestPath string, kindsToRender []v1.GroupVersionKind) ([]unstructured.Unstructured, error) {
+func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRender []v1.GroupVersionKind) ([]unstructured.Unstructured, error) {
 	// reading
 	content, readErr := os.ReadFile(manifestPath)
 	if readErr != nil {
@@ -121,21 +121,21 @@ func readRenderedManifests(manifestPath string, kindsToRender []v1.GroupVersionK
 
 		// Optionally: We can be rendering only selected types of objects, e.g. only "kind: Job"
 		if len(kindsToRender) > 0 {
-			logrus.Debug("Going to use a filter to keep only selected types of resources")
+			logger.Debug("Going to use a filter to keep only selected types of resources")
 
 			gvk := obj.GroupVersionKind()
 			found := false
-			logrus.Debugf("Current kind: %v, allowed kinds: %v", gvk.String(), kindsToRender)
+			logger.Debugf("Current kind: %v, allowed kinds: %v", gvk.String(), kindsToRender)
 
 			for _, search := range kindsToRender {
 				if gvk.String() == search.String() {
-					logrus.Debug("Matched.")
+					logger.Debug("Matched.")
 					found = true
 					break
 				}
 			}
 			if !found {
-				logrus.Debugf("Skipping not matching the filter: %v", gvk.String())
+				logger.Debugf("Skipping not matching the filter: %v", gvk.String())
 				continue
 			}
 		}
@@ -155,17 +155,17 @@ func writeGPGKey(backup *domain.ScheduledBackupAggregate, writeToPath string, op
 }
 
 // writeDefinition is writing the definition.yaml into the workspace
-func writeDefinition(backup *domain.ScheduledBackupAggregate, writeToPath string) error {
+func writeDefinition(logger *logrus.Entry, backup *domain.ScheduledBackupAggregate, writeToPath string) error {
 	var vars map[string]interface{}
 	if err := yaml.Unmarshal([]byte(backup.Spec.Vars), &vars); err != nil {
 		return errors.Wrap(err, "cannot parse .spec.vars as YAML")
 	}
 
-	logrus.Debugf("backup.AdditionalVarsList = %v", backup.AdditionalVarsList)
+	logger.Debugf("backup.AdditionalVarsList = %v", backup.AdditionalVarsList)
 	// each entry from Kubernetes secret convert into a YAML value
 	// by converting a dotted path into a map
 	if len(backup.VarsListSecret.Data) > 0 || len(backup.AdditionalVarsList) > 0 {
-		logrus.Debugf("Copying vars from referenced secret")
+		logger.Debugf("Copying vars from referenced secret")
 
 		for sourceNum, source := range []map[string][]byte{backup.AdditionalVarsList, backup.VarsListSecret.Data} {
 			for path, value := range source {
@@ -176,7 +176,7 @@ func writeDefinition(backup *domain.ScheduledBackupAggregate, writeToPath string
 					}
 				}
 
-				logrus.Debugf("Setting '%s' -> '%v'", path, string(value))
+				logger.Debugf("Setting '%s' -> '%v'", path, string(value))
 				expression, err := jp.ParseString("$." + path)
 				if err != nil {
 					return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
@@ -188,9 +188,9 @@ func writeDefinition(backup *domain.ScheduledBackupAggregate, writeToPath string
 		}
 	}
 
-	logrus.Debug("Serializing definition.yaml")
+	logger.Debug("Serializing definition.yaml")
 	asYaml, marshalingErr := yaml.Marshal(vars)
-	logrus.Debug(string(asYaml))
+	logger.Debug(string(asYaml))
 	if marshalingErr != nil {
 		return errors.Wrap(marshalingErr, "cannot serialize vars to YAML as a definition.yaml")
 	}

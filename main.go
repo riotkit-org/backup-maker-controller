@@ -68,6 +68,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	// todo: fix together with https://github.com/riotkit-org/backup-maker-operator/issues/6
 	// turn on debug also globally in the logrus
 	//if opts.Level.Enabled(zapcore.DebugLevel) {
 	logrus.SetLevel(logrus.DebugLevel)
