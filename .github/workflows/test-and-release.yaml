@@ -1,0 +1,17 @@
+name: Test and release
+on:
+    push:
+
+jobs:
+    build:
+        uses: riotkit-org/.github/.github/workflows/go-kubernetes.release.yaml@main
+        with:
+            binaryName: manager
+            dockerImage: ghcr.io/riotkit-org/backup-maker-controller
+            sonarCloudEnabled: false
+            dockerReleasingEnabled: true
+            publishingHelmChartEnabled: true
+
+        secrets:
+            SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
+            GH_RW_TOKEN: "${{ secrets.GH_RW_TOKEN }}"
