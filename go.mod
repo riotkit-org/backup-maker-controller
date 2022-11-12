@@ -18,7 +18,11 @@ require (
 	sigs.k8s.io/controller-runtime v0.13.1
 )
 
-require github.com/go-logr/logr v1.2.3 // indirect
+require (
+	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
+)
 
 require (
 	github.com/BurntSushi/toml v0.4.1 // indirect
