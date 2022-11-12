@@ -12,8 +12,8 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.25.2
-	k8s.io/apimachinery v0.25.2
+	k8s.io/api v0.25.4
+	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.2
 	sigs.k8s.io/controller-runtime v0.13.0
 )
