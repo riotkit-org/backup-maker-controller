@@ -87,8 +87,9 @@ type CronJobSpec struct {
 type ScheduledBackupStatus struct {
 	LastAppliedSpecHash     string             `json:"lastAppliedSpecHash,omitempty"`
 	Conditions              []metav1.Condition `json:"conditions,omitempty"`
-	OwnedReferences         ChildrenReferences `json:"ownedReferences"`
-	ChildrenResourcesHealth []JobHealthStatus  `json:"childrenResourcesHealth"`
+	OwnedReferences         ChildrenReferences `json:"ownedReferences,omitempty"`
+	ChildrenResourcesHealth []JobHealthStatus  `json:"childrenResourcesHealth,omitempty"`
+	Healthy                 bool               `json:"healthy,omitempty"`
 }
 
 // +genclient

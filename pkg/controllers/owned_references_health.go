@@ -19,6 +19,7 @@ func createOwnedReferencesHealthReport(ctx context.Context, ownedReferences riot
 		status, err := integrations.GetScheduledJobHealthStatus(ctx, resource.GetGVK(), resource.TrackingId, namespace)
 		logrus.Debugf("JobStatus = %v, err = %v", status, err)
 		if err != nil {
+			// we have to ignore resources like Secrets, ConfigMaps etc.
 			if err.Error() == integration.ErrorUnrecognizedResourceType {
 				continue
 			}

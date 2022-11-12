@@ -44,6 +44,10 @@ func (sb ScheduledBackupAggregate) GetObjectForOwnerReference() KubernetesResour
 	return sb.ScheduledBackup
 }
 
+func (sb ScheduledBackupAggregate) GetReferencesOfOwnedObjects() v1alpha1.ChildrenReferences {
+	return sb.ScheduledBackup.Status.OwnedReferences
+}
+
 // AddOwnedObject is adding a child element
 func (sb *ScheduledBackupAggregate) AddOwnedObject(doc *unstructured.Unstructured) {
 	v1alpha1.AddOwnedObject(&sb.Status.OwnedReferences, doc)

@@ -2,6 +2,7 @@ package factory
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-logr/logr"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
@@ -45,6 +46,19 @@ func (r *CachedFetcher) fetchSecret(ctx context.Context, name string, namespace 
 	secret := v1.Secret{}
 	getErr := r.Cache.Get(ctx, client.ObjectKey{Name: name, Namespace: namespace}, &secret)
 	return &secret, getErr
+}
+
+func FetchSBAggregate(ctx context.Context, cf CachedFetcher, c client.Client, logger logr.Logger, req ctrl.Request) (*domain.ScheduledBackupAggregate, error) {
+	backup, err := cf.FetchScheduledBackup(ctx, req)
+	logger.Info(fmt.Sprintf("Fetching '%s' from '%s' namespace", backup.Name, backup.Namespace))
+	if err != nil {
+		return &domain.ScheduledBackupAggregate{}, err
+	}
+	f := NewFactory(c, cf, logger)
+	aggregate, _, hydrateErr := f.CreateScheduledBackupAggregate(
+		ctx, backup,
+	)
+	return aggregate, hydrateErr
 }
 
 // FetchRBAAggregate fetches RequestedBackupAction aggregate with all of its dependencies

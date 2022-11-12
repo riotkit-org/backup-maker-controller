@@ -148,7 +148,16 @@ func main() {
 		BRClient:     brClient,
 		Client:       mgr.GetClient(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Job")
+		setupLog.Error(err, "unable to create controller", "controller", "JobsManagedByRequestedBackupActionObserver")
+		os.Exit(1)
+	}
+	if err = (&controllers2.JobsManagedByScheduledBackupObserver{
+		Integrations: &integrations,
+		Fetcher:      fetcher,
+		BRClient:     brClient,
+		Client:       mgr.GetClient(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "JobsManagedByScheduledBackupObserver")
 		os.Exit(1)
 	}
 
