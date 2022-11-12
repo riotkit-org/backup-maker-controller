@@ -15,13 +15,10 @@ require (
 	k8s.io/api v0.25.2
 	k8s.io/apimachinery v0.25.2
 	k8s.io/client-go v0.25.2
-	sigs.k8s.io/controller-runtime v0.13.0
+	sigs.k8s.io/controller-runtime v0.13.1
 )
 
-require (
-	github.com/go-logr/logr v1.2.3 // indirect
-	google.golang.org/genproto v0.0.0-20220616135557-88e70c0c3a90 // indirect
-)
+require github.com/go-logr/logr v1.2.3 // indirect
 
 require (
 	github.com/BurntSushi/toml v0.4.1 // indirect
