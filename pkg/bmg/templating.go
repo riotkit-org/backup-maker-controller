@@ -169,7 +169,7 @@ func writeDefinition(logger *logrus.Entry, backup *domain.ScheduledBackupAggrega
 	if len(backup.AdditionalVarsList) > 0 {
 		varSources = append(varSources, backup.AdditionalVarsList)
 	}
-	if backup.VarsListSecret.Data != nil && len(backup.VarsListSecret.Data) > 0 {
+	if backup.VarsListSecret != nil && backup.VarsListSecret.Data != nil && len(backup.VarsListSecret.Data) > 0 {
 		varSources = append(varSources, backup.VarsListSecret.Data)
 	}
 	logger.Debugf("Copying vars from referenced secret")
