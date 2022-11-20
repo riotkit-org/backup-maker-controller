@@ -83,7 +83,6 @@ func NewRequestedBackupActionAggregate(action *v1alpha1.RequestedBackupAction, s
 	aggregate := RequestedBackupActionAggregate{}
 	aggregate.RequestedBackupAction = action
 	aggregate.Scheduled = scheduled
-	aggregate.Scheduled.AdditionalVarsList = make(map[string][]byte)
 	aggregate.RequestedBackupAction.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "riotkit.org",
 		Version: "v1alpha1",

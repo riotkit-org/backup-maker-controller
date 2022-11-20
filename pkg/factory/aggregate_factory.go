@@ -28,6 +28,7 @@ func NewFactory(client client.Client, fetcher CachedFetcher, logger *logrus.Entr
 // CreateScheduledBackupAggregate is creating a fully hydrated object (aggregate) with all dependencies inside
 func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1alpha1.ScheduledBackup) (*domain.ScheduledBackupAggregate, error, error) {
 	aggregate := domain.ScheduledBackupAggregate{ScheduledBackup: backup}
+	aggregate.AdditionalVarsList = make(map[string][]byte)
 
 	if err := c.hydrateGPGSecret(ctx, &aggregate); err != nil {
 		return &aggregate, ErrorActionRequeue, err
@@ -40,6 +41,16 @@ func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1
 	}
 	if err := c.hydrateVarsSecret(ctx, &aggregate); err != nil {
 		return &aggregate, ErrorActionRequeue, err
+	}
+
+	//
+	// .spec.tokenSecretRef: Extract access token from `kind: Secret` and put into the .spec.vars.Repository.token
+	//
+	if aggregate.TokenSecret != nil && aggregate.TokenSecret.Data != nil {
+		key := backup.Spec.TokenSecretRef.TokenKey
+		if val, exists := aggregate.TokenSecret.Data[key]; exists && string(val) != "" {
+			aggregate.AdditionalVarsList["Repository.token"] = val
+		}
 	}
 
 	return &aggregate, nil, nil
@@ -109,7 +120,6 @@ func (c *Factory) hydrateAccessToken(ctx context.Context, a *domain.ScheduledBac
 		return errors.Wrap(tokenErr, "cannot fetch access token Secret (access token to access Backup Repository server)")
 	}
 
-	// todo: USE IT!
 	a.TokenSecret = tokenSecret
 	return nil
 }
