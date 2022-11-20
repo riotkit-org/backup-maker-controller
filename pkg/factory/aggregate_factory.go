@@ -109,6 +109,7 @@ func (c *Factory) hydrateAccessToken(ctx context.Context, a *domain.ScheduledBac
 		return errors.Wrap(tokenErr, "cannot fetch access token Secret (access token to access Backup Repository server)")
 	}
 
+	// todo: USE IT!
 	a.TokenSecret = tokenSecret
 	return nil
 }

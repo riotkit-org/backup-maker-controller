@@ -162,28 +162,33 @@ func writeDefinition(logger *logrus.Entry, backup *domain.ScheduledBackupAggrega
 	}
 
 	logger.Debugf("backup.AdditionalVarsList = %v", backup.AdditionalVarsList)
+
 	// each entry from Kubernetes secret convert into a YAML value
 	// by converting a dotted path into a map
-	if len(backup.VarsListSecret.Data) > 0 || len(backup.AdditionalVarsList) > 0 {
-		logger.Debugf("Copying vars from referenced secret")
+	varSources := make([]map[string][]byte, 0)
+	if len(backup.AdditionalVarsList) > 0 {
+		varSources = append(varSources, backup.AdditionalVarsList)
+	}
+	if backup.VarsListSecret.Data != nil && len(backup.VarsListSecret.Data) > 0 {
+		varSources = append(varSources, backup.VarsListSecret.Data)
+	}
+	logger.Debugf("Copying vars from referenced secret")
+	for sourceNum, source := range varSources {
+		for path, value := range source {
+			// if only specific keys should be used from the secret, then the rest should be skipped
+			if sourceNum == 1 && len(backup.Spec.VarsSecretRef.ImportOnlyKeys) > 0 {
+				if !contains(backup.Spec.VarsSecretRef.ImportOnlyKeys, path) {
+					continue
+				}
+			}
 
-		for sourceNum, source := range []map[string][]byte{backup.AdditionalVarsList, backup.VarsListSecret.Data} {
-			for path, value := range source {
-				// if only specific keys should be used from the secret, then the rest should be skipped
-				if sourceNum == 1 && len(backup.Spec.VarsSecretRef.ImportOnlyKeys) > 0 {
-					if !contains(backup.Spec.VarsSecretRef.ImportOnlyKeys, path) {
-						continue
-					}
-				}
-
-				logger.Debugf("Setting '%s' -> '%v'", path, string(value))
-				expression, err := jp.ParseString("$." + path)
-				if err != nil {
-					return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
-				}
-				if setErr := expression.Set(vars, string(value)); setErr != nil {
-					return errors.Wrap(err, fmt.Sprintf("cannot merge value from Secret into the vars, name: '%s'", path))
-				}
+			logger.Debugf("Setting '%s' -> '%v'", path, string(value))
+			expression, err := jp.ParseString("$." + path)
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
+			}
+			if setErr := expression.Set(vars, string(value)); setErr != nil {
+				return errors.Wrap(err, fmt.Sprintf("cannot merge value from Secret into the vars, name: '%s'", path))
 			}
 		}
 	}
