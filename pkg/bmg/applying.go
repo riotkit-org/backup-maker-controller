@@ -22,7 +22,6 @@ func ApplyScheduledBackup(ctx context.Context, logger *logrus.Entry, recorder re
 	// add owner references and namespaces to all objects that this controller creates
 	for _, doc := range rendered {
 		addOwnerReferences(logger, &doc, backup)
-		addChildReferences(&doc, backup)
 		addNamespace(&doc, backup.GetScheduledBackup().Namespace)
 	}
 
@@ -35,6 +34,7 @@ func ApplyScheduledBackup(ctx context.Context, logger *logrus.Entry, recorder re
 		if err := CreateOrUpdate(ctx, recorder, dynClient, restCfg, &doc, backup.GetScheduledBackup()); err != nil {
 			return errors.Wrap(err, "cannot apply manifest to the cluster")
 		}
+		addChildReferences(&doc, backup)
 	}
 
 	return nil
