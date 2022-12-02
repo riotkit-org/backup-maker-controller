@@ -19,10 +19,10 @@ jobs:
                   go-version: 1.19
 
             - name: Bump dependency
-              runs: "go get github.com/riotkit-org/br-backup-maker@main"
+              run: "go get github.com/riotkit-org/br-backup-maker@main"
 
             - name: Commit dependencies list
-              runs: "git add go.mod go.sum; git commit -m 'chore: Bump github.com/riotkit-org/br-backup-maker'"
+              run: "git add go.mod go.sum; git commit -m 'chore: Bump github.com/riotkit-org/br-backup-maker'"
 
             - name: Push
-              runs: "git push"
+              run: "git push"
