@@ -1,0 +1,28 @@
+name: Test and release
+on: workflow_dispatch
+
+permissions:
+    contents: write
+
+jobs:
+    build:
+        runs-on: ubuntu-22.04
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+
+            - name: Set up Go
+              uses: actions/setup-go@v3
+              with:
+                  go-version: 1.19
+
+            - name: Bump dependency
+              runs: "go get github.com/riotkit-org/br-backup-maker@main"
+
+            - name: Commit dependencies list
+              runs: "git add go.mod go.sum; git commit -m 'chore: Bump github.com/riotkit-org/br-backup-maker'"
+
+            - name: Push
+              runs: "git push"
