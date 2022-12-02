@@ -22,7 +22,7 @@ jobs:
               run: "go get github.com/riotkit-org/br-backup-maker@main"
 
             - name: Commit dependencies list
-              run: "git config --global user.email 'actions@github.com'; git config --global user.name 'CI/CD robot'; git add go.mod go.sum; git commit -m 'chore: Bump github.com/riotkit-org/br-backup-maker'"
+              run: "git config --global user.email 'actions@github.com'; git config --global user.name 'CI/CD robot'; git add go.mod go.sum; git commit -m 'chore: Bump github.com/riotkit-org/br-backup-maker' || true"
 
             - name: Push
               run: "git push"
