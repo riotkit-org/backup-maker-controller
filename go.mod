@@ -8,7 +8,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.20.1
 	github.com/pkg/errors v0.9.1
-	github.com/riotkit-org/br-backup-maker v0.0.0-20221201213522-78af0140970d
+	github.com/riotkit-org/br-backup-maker v0.0.0-20221202055350-01f2cb03ee52
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be
