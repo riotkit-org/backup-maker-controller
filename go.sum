@@ -312,6 +312,8 @@ github.com/prometheus/procfs v0.7.3 h1:4jVXhlkAyzOScmCkXBTOLRLTz8EeU+eyjrwB/EPq0
 github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221203110026-c7b1b41d3b97 h1:Lfq0Kg3PKTQ4wdwjJaP441kksit1BTqDuptTjVVW8KI=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221203110026-c7b1b41d3b97/go.mod h1:jMszmlkYkXKJ6MnI1EckJZsfZHq+UnFHXxtdnq4OGmQ=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221203155045-045a75d89e81 h1:0ehx4oyBOcVlY6/3ZkEUhZ7ltNj9xYxekVlpwI1uflU=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221203155045-045a75d89e81/go.mod h1:jMszmlkYkXKJ6MnI1EckJZsfZHq+UnFHXxtdnq4OGmQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shopspring/decimal v1.2.0 h1:abSATXmQEYyShuxI4/vyW3tV1MrKAJzCZ/0zLUXYbsQ=
