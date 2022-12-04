@@ -91,11 +91,18 @@ func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBacku
 				[]metav1.OwnerReference{
 					{APIVersion: "v1alpha1", Kind: "ScheduledBackup", Name: a.Name, UID: a.UID},
 				},
+				&a.Spec.GPGKeySecretRef,
 			)
 			if err := c.Client.Create(ctx, gpgSecrets); err != nil {
 				c.logger.Error(err, "cannot apply a Kubernetes secret for generated GPG key, will try again")
 				return errors.Wrap(err, "cannot apply a Secret to Kubernetes")
 			}
+		}
+
+	} else if a.Spec.GPGKeySecretRef.CreateIfNotExists {
+		// Update existing Secret with new GPG identity, in case it is incorrectly formatted or missing
+		if err := gpg.UpdateGPGSecretWithRecreatedGPGKey(gpgSecrets, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false); err != nil {
+			return errors.Wrap(err, "cannot update existing secret with new identity (existing secret was missing specified keys in .data/.stringData section)")
 		}
 	}
 	a.GPGSecret = gpgSecrets

@@ -41,6 +41,34 @@ type GPGKeySecretSpec struct {
 	CreateIfNotExists bool `json:"createIfNotExists"`
 }
 
+func (in *GPGKeySecretSpec) GetPrivateKeyIndex() string {
+	if in.PrivateKey == "" {
+		return "key"
+	}
+	return in.PrivateKey
+}
+
+func (in *GPGKeySecretSpec) GetPublicKeyIndex() string {
+	if in.PublicKey == "" {
+		return "key.pub"
+	}
+	return in.PublicKey
+}
+
+func (in *GPGKeySecretSpec) GetPassphraseIndex() string {
+	if in.PassphraseKey == "" {
+		return "passphrase"
+	}
+	return in.PassphraseKey
+}
+
+func (in *GPGKeySecretSpec) GetEmailIndex() string {
+	if in.Email == "" {
+		return "e-mail.txt"
+	}
+	return in.Email
+}
+
 // TokenSecretSpec represents .spec.tokenSecretRef
 type TokenSecretSpec struct {
 	SecretName string `json:"secretName"`
