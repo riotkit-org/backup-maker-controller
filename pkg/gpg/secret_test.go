@@ -35,30 +35,57 @@ func TestCreateNewGPGSecret_BasicPositivePath(t *testing.T) {
 func TestExistingSecretIsFilledUpWithNewIdentityIfKeysAreMissing(t *testing.T) {
 	spec := v1alpha1.GPGKeySecretSpec{
 		SecretName:        "antifa",
-		PublicKey:         "key.pub",
-		PrivateKey:        "key",
+		PublicKey:         "keyfile.pub",
+		PrivateKey:        "keyfile",
 		PassphraseKey:     "passphrase",
 		Email:             "e-mail.txt",
 		CreateIfNotExists: true,
 	}
 
-	existingSecret := v1.Secret{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
-		Immutable:  nil,
-		Data:       nil,
-		StringData: map[string]string{
+	testData := []map[string]string{
+		{
 			"public-key": "something", // this one does not match "key.pub"
 			"key":        "some",
 			"passphrase": "thing",
 			"email":      "just an e-mail",
 		},
-		Type: "",
+		{
+			"key.pub":    "something",
+			"key.priv":   "some", // this one does not match "key"
+			"passphrase": "thing",
+			"email":      "just an e-mail",
+		},
+		// empty public key
+		{
+			"key.pub":    "", // empty
+			"key":        "some",
+			"passphrase": "thing",
+			"email":      "just an e-mail",
+		},
+		// empty private key
+		{
+			"key.pub":    "non-empty",
+			"key":        "", // empty
+			"passphrase": "thing",
+			"email":      "just an e-mail",
+		},
 	}
 
-	err := UpdateGPGSecretWithRecreatedGPGKey(&existingSecret, &spec, "antifa@antifa.cz", false)
-	assert.Nil(t, err)
-	assert.Contains(t, existingSecret.StringData["key"], "-----BEGIN PGP PRIVATE KEY BLOCK-----")
-	assert.Contains(t, existingSecret.StringData["key.pub"], "-----BEGIN PGP PUBLIC KEY BLOCK-----")
-	assert.Contains(t, existingSecret.StringData["e-mail.txt"], "antifa@antifa.cz")
+	for _, testCase := range testData {
+		existingSecret := v1.Secret{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{},
+			Immutable:  nil,
+			Data:       nil,
+			StringData: testCase,
+			Type:       "",
+		}
+
+		err := UpdateGPGSecretWithRecreatedGPGKey(&existingSecret, &spec, "antifa@antifa.cz", false)
+		assert.Nil(t, err)
+		assert.Contains(t, existingSecret.StringData["keyfile"], "-----BEGIN PGP PRIVATE KEY BLOCK-----")
+		assert.Contains(t, existingSecret.StringData["keyfile.pub"], "-----BEGIN PGP PUBLIC KEY BLOCK-----")
+		assert.Contains(t, existingSecret.StringData["e-mail.txt"], "antifa@antifa.cz")
+	}
+
 }
