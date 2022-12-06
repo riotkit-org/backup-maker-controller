@@ -33,6 +33,9 @@ func CreateNewGPGSecret(name string, namespace string, email string, owners []me
 }
 
 func UpdateGPGSecretWithRecreatedGPGKey(secret *v1.Secret, spec *v1alpha1.GPGKeySecretSpec, email string, force bool) error {
+	if secret.StringData == nil {
+		secret.StringData = make(map[string]string, 0)
+	}
 	secret.StringData[spec.GetEmailIndex()] = email
 
 	if !shouldUpdate(secret, spec) && !force {
