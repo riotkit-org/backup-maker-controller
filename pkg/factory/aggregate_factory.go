@@ -53,6 +53,15 @@ func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1
 		}
 	}
 
+	//
+	// .Values.gpgKeyContent is a source of GPG key (public or private - depends on the operation)
+	//
+	if aggregate.Spec.Operation == "backup" {
+		aggregate.AdditionalVarsList["HelmValues.gpgKeyContent"] = aggregate.GPGSecret.Data[aggregate.Spec.GPGKeySecretRef.PublicKey]
+	} else {
+		aggregate.AdditionalVarsList["HelmValues.gpgKeyContent"] = aggregate.GPGSecret.Data[aggregate.Spec.GPGKeySecretRef.PrivateKey]
+	}
+
 	return &aggregate, nil, nil
 }
 

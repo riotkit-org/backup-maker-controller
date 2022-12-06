@@ -54,8 +54,7 @@ spec:
         # This means that any ${...} and $(...) will be executed in target environment e.g. inside Kubernetes POD
         Repository:
           url: "http://my-example.org"
-          token: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyy"
-          encryptionKeyPath: "/mnt/secrets/gpg-key"
+          token: "xxxxxx-yyyy-zzzz" # Is ignored and overwritten if using .spec.tokenSecretRef
           passphrase: "riotkit"
           recipient: "test@riotkit.org"
           collectionId: "iwa-ait"
