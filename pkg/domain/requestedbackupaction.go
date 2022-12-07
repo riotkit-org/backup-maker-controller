@@ -32,21 +32,21 @@ func (a RequestedBackupActionAggregate) AcceptedResourceTypes() []v1.GroupVersio
 		{Group: "batch", Version: "v1", Kind: "Job"},
 		{Group: "", Version: "v1", Kind: "Pod"},
 
-		// Tekton Pipelines v1alpha1
-		{Group: "tekton.dev", Version: "v1alpha1", Kind: "PipelineRun"},
-		{Group: "tekton.dev", Version: "v1alpha1", Kind: "TaskRun"},
-		{Group: "tekton.dev", Version: "v1alpha1", Kind: "Pipeline"},
-		{Group: "tekton.dev", Version: "v1alpha1", Kind: "Task"},
-
-		// Tekton Pipelines v1
-		{Group: "tekton.dev", Version: "v1", Kind: "PipelineRun"},
-		{Group: "tekton.dev", Version: "v1", Kind: "TaskRun"},
-		{Group: "tekton.dev", Version: "v1", Kind: "Pipeline"},
-		{Group: "tekton.dev", Version: "v1", Kind: "Task"},
-
-		// Argo Workflows
-		{Group: "argoproj.io", Version: "v1alpha1", Kind: "Workflow"},
-		{Group: "argoproj.io", Version: "v1alpha1", Kind: "WorkflowTemplate"},
+		//// Tekton Pipelines v1alpha1
+		//{Group: "tekton.dev", Version: "v1alpha1", Kind: "PipelineRun"},
+		//{Group: "tekton.dev", Version: "v1alpha1", Kind: "TaskRun"},
+		//{Group: "tekton.dev", Version: "v1alpha1", Kind: "Pipeline"},
+		//{Group: "tekton.dev", Version: "v1alpha1", Kind: "Task"},
+		//
+		//// Tekton Pipelines v1
+		//{Group: "tekton.dev", Version: "v1", Kind: "PipelineRun"},
+		//{Group: "tekton.dev", Version: "v1", Kind: "TaskRun"},
+		//{Group: "tekton.dev", Version: "v1", Kind: "Pipeline"},
+		//{Group: "tekton.dev", Version: "v1", Kind: "Task"},
+		//
+		//// Argo Workflows
+		//{Group: "argoproj.io", Version: "v1alpha1", Kind: "Workflow"},
+		//{Group: "argoproj.io", Version: "v1alpha1", Kind: "WorkflowTemplate"},
 	}
 }
 
