@@ -76,7 +76,9 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 		return ctrlResult, err
 	}
 
-	logger.Debugf("Fetched aggregate .status = %v, .resourceVersion = %v", aggregate.RequestedBackupAction.Status, aggregate.RequestedBackupAction.ResourceVersion)
+	logger.Debugf("Fetched aggregate .status = %v, .resourceVersion = %v",
+		aggregate.RequestedBackupAction.Status,
+		aggregate.RequestedBackupAction.ResourceVersion)
 
 	if aggregate.WasAlreadyProcessed() {
 		r.Recorder.Event(aggregate.RequestedBackupAction, "Normal", "Unchanged", "Successfully reconciled, action already performed, cannot do it once more")

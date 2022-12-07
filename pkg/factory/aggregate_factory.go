@@ -86,7 +86,11 @@ func (c *Factory) CreateRequestedBackupActionAggregate(ctx context.Context, acti
 //	NOTICE: Backup of this key is on your side. Better approach is to generate it by your own and use e.g. SealedSecrets to keep in GIT
 //	        or to fetch it with kubectl, encrypt and store in the repository
 func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBackupAggregate) error {
-	gpgSecrets, gpgErr := c.fetcher.fetchSecret(ctx, a.Spec.GPGKeySecretRef.SecretName, a.Namespace)
+	secret, gpgErr := c.fetcher.fetchSecret(ctx, a.Spec.GPGKeySecretRef.SecretName, a.Namespace)
+
+	//
+	// Create new if Secret does not exist at all
+	//
 	if apierrors.IsNotFound(gpgErr) {
 		c.logger.Info("No GPG secret found")
 
@@ -95,7 +99,7 @@ func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBacku
 			return errors.Wrap(gpgErr, "cannot fetch GPG containing Secret")
 		} else {
 			c.logger.Info("Creating a new GPG key pair and storing as a Secret. Notice: Copy that Secret, encrypt it and put into your GIT repository. If you loose the keys you will not restore backups")
-			gpgSecrets, gpgErr = gpg.CreateNewGPGSecret(
+			secret, gpgErr = gpg.CreateNewGPGSecret(
 				a.Spec.GPGKeySecretRef.SecretName,
 				a.Namespace,
 				a.Spec.GPGKeySecretRef.Email,
@@ -104,26 +108,38 @@ func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBacku
 				},
 				&a.Spec.GPGKeySecretRef,
 			)
-			if err := c.Client.Create(ctx, gpgSecrets); err != nil {
+			if err := c.Client.Create(ctx, secret); err != nil {
 				c.logger.Error(err, "cannot apply a Kubernetes secret for generated GPG key, will try again")
 				return errors.Wrap(err, "cannot apply a Secret to Kubernetes")
 			}
 		}
 
+		//
+		// Update existing Secret
+		//
 	} else if a.Spec.GPGKeySecretRef.CreateIfNotExists {
 		c.logger.Info("Updating existing GPG secret if necessary")
+
+		// fetch a fresh secret to avoid: "the object has been modified; please apply your changes to the latest version and try again"
+		fetchErr := c.Client.Get(ctx, client.ObjectKey{Name: secret.Name, Namespace: secret.Namespace}, secret)
+		if fetchErr != nil {
+			return errors.Wrapf(fetchErr, "cannot fetch existing secret from API - %s/%s", secret.Name, secret.Namespace)
+		}
+
+		// todo: optimize - check on this level if the secret needs an update to avoid extra API call
+
 		// Update existing Secret with new GPG identity, in case it is incorrectly formatted or missing
-		updated, err := gpg.UpdateGPGSecretWithRecreatedGPGKey(gpgSecrets, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false)
+		updated, err := gpg.UpdateGPGSecretWithRecreatedGPGKey(secret, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false)
 		if err != nil {
 			return errors.Wrap(err, "cannot update existing secret with new identity (existing secret was missing specified keys in .data/.stringData section)")
 		}
 		if updated {
-			if err := c.Client.Update(ctx, gpgSecrets); err != nil {
+			if err := c.Client.Update(ctx, secret); err != nil {
 				return errors.Wrap(err, "cannot append GPG identity to the secret")
 			}
 		}
 	}
-	a.GPGSecret = gpgSecrets
+	a.GPGSecret = secret
 	return nil
 }
 
