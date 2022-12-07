@@ -79,7 +79,7 @@ func FetchRBAAggregate(ctx context.Context, cf CachedFetcher, c client.Client, l
 		ctx, requestedAction, scheduledBackup,
 	)
 	if hydrateErr != nil {
-		return &domain.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, err
+		return &domain.RequestedBackupActionAggregate{}, ctrl.Result{RequeueAfter: time.Second * 30}, hydrateErr
 	}
 	return aggregate, ctrl.Result{}, nil
 }
