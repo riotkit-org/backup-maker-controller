@@ -88,6 +88,8 @@ func (c *Factory) CreateRequestedBackupActionAggregate(ctx context.Context, acti
 func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBackupAggregate) error {
 	gpgSecrets, gpgErr := c.fetcher.fetchSecret(ctx, a.Spec.GPGKeySecretRef.SecretName, a.Namespace)
 	if apierrors.IsNotFound(gpgErr) {
+		c.logger.Info("No GPG secret found")
+
 		if !a.Spec.GPGKeySecretRef.CreateIfNotExists {
 			c.logger.Info("Referenced secret does not exist, .spec.gpgKeySecretRef.createIfNotExists is set to false, waiting for a secret")
 			return errors.Wrap(gpgErr, "cannot fetch GPG containing Secret")
@@ -109,9 +111,16 @@ func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBacku
 		}
 
 	} else if a.Spec.GPGKeySecretRef.CreateIfNotExists {
+		c.logger.Info("Updating existing GPG secret if necessary")
 		// Update existing Secret with new GPG identity, in case it is incorrectly formatted or missing
-		if err := gpg.UpdateGPGSecretWithRecreatedGPGKey(gpgSecrets, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false); err != nil {
+		updated, err := gpg.UpdateGPGSecretWithRecreatedGPGKey(gpgSecrets, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false)
+		if err != nil {
 			return errors.Wrap(err, "cannot update existing secret with new identity (existing secret was missing specified keys in .data/.stringData section)")
+		}
+		if updated {
+			if err := c.Client.Update(ctx, gpgSecrets); err != nil {
+				return errors.Wrap(err, "cannot append GPG identity to the secret")
+			}
 		}
 	}
 	a.GPGSecret = gpgSecrets
