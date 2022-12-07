@@ -39,7 +39,7 @@ func UpdateGPGSecretWithRecreatedGPGKey(secret *v1.Secret, spec *v1alpha1.GPGKey
 	}
 	secret.Data[spec.GetEmailIndex()] = []byte(email)
 
-	if !shouldUpdate(secret, spec) && !force {
+	if !ShouldUpdate(secret, spec) && !force {
 		logrus.Info("Secret does not need an update")
 		return false, nil
 	}
@@ -57,7 +57,7 @@ func UpdateGPGSecretWithRecreatedGPGKey(secret *v1.Secret, spec *v1alpha1.GPGKey
 	return true, nil
 }
 
-func shouldUpdate(secret *v1.Secret, spec *v1alpha1.GPGKeySecretSpec) bool {
+func ShouldUpdate(secret *v1.Secret, spec *v1alpha1.GPGKeySecretSpec) bool {
 	d := secret.Data
 	if d == nil {
 		d = make(map[string][]byte, 0)

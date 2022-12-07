@@ -120,22 +120,22 @@ func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBacku
 	} else if a.Spec.GPGKeySecretRef.CreateIfNotExists {
 		c.logger.Info("Updating existing GPG secret if necessary")
 
-		// fetch a fresh secret to avoid: "the object has been modified; please apply your changes to the latest version and try again"
-		fetchErr := c.Client.Get(ctx, client.ObjectKey{Name: secret.Name, Namespace: secret.Namespace}, secret)
-		if fetchErr != nil {
-			return errors.Wrapf(fetchErr, "cannot fetch existing secret from API - %s/%s", secret.Name, secret.Namespace)
-		}
+		if gpg.ShouldUpdate(secret, &a.Spec.GPGKeySecretRef) {
+			// fetch a fresh secret to avoid: "the object has been modified; please apply your changes to the latest version and try again"
+			fetchErr := c.Client.Get(ctx, client.ObjectKey{Name: secret.Name, Namespace: secret.Namespace}, secret)
+			if fetchErr != nil {
+				return errors.Wrapf(fetchErr, "cannot fetch existing secret from API - %s/%s", secret.Name, secret.Namespace)
+			}
 
-		// todo: optimize - check on this level if the secret needs an update to avoid extra API call
-
-		// Update existing Secret with new GPG identity, in case it is incorrectly formatted or missing
-		updated, err := gpg.UpdateGPGSecretWithRecreatedGPGKey(secret, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false)
-		if err != nil {
-			return errors.Wrap(err, "cannot update existing secret with new identity (existing secret was missing specified keys in .data/.stringData section)")
-		}
-		if updated {
-			if err := c.Client.Update(ctx, secret); err != nil {
-				return errors.Wrap(err, "cannot append GPG identity to the secret")
+			// Update existing Secret with new GPG identity, in case it is incorrectly formatted or missing
+			updated, err := gpg.UpdateGPGSecretWithRecreatedGPGKey(secret, &a.Spec.GPGKeySecretRef, a.Spec.GPGKeySecretRef.Email, false)
+			if err != nil {
+				return errors.Wrap(err, "cannot update existing secret with new identity (existing secret was missing specified keys in .data/.stringData section)")
+			}
+			if updated {
+				if err := c.Client.Update(ctx, secret); err != nil {
+					return errors.Wrap(err, "cannot append GPG identity to the secret")
+				}
 			}
 		}
 	}
