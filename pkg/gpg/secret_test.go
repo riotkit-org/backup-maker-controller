@@ -23,9 +23,9 @@ func TestCreateNewGPGSecret_BasicPositivePath(t *testing.T) {
 	assert.Nil(t, err)
 
 	// contains all the necessary files
-	assert.Contains(t, secret.StringData["key"], "-----BEGIN PGP PRIVATE KEY BLOCK-----")
-	assert.Contains(t, secret.StringData["key.pub"], "-----BEGIN PGP PUBLIC KEY BLOCK-----")
-	assert.Contains(t, secret.StringData["e-mail.txt"], "antifa@antifa.cz")
+	assert.Contains(t, string(secret.Data["key"]), "-----BEGIN PGP PRIVATE KEY BLOCK-----")
+	assert.Contains(t, string(secret.Data["key.pub"]), "-----BEGIN PGP PUBLIC KEY BLOCK-----")
+	assert.Contains(t, string(secret.Data["e-mail.txt"]), "antifa@antifa.cz")
 
 	// contains labels and annotations
 	assert.Equal(t, secret.Labels["riotkit.org/type"], "GPGSecret")
@@ -83,9 +83,8 @@ func TestExistingSecretIsFilledUpWithNewIdentityIfKeysAreMissing(t *testing.T) {
 
 		err := UpdateGPGSecretWithRecreatedGPGKey(&existingSecret, &spec, "antifa@antifa.cz", false)
 		assert.Nil(t, err)
-		assert.Contains(t, existingSecret.StringData["keyfile"], "-----BEGIN PGP PRIVATE KEY BLOCK-----")
-		assert.Contains(t, existingSecret.StringData["keyfile.pub"], "-----BEGIN PGP PUBLIC KEY BLOCK-----")
-		assert.Contains(t, existingSecret.StringData["e-mail.txt"], "antifa@antifa.cz")
+		assert.Contains(t, string(existingSecret.Data["keyfile"]), "-----BEGIN PGP PRIVATE KEY BLOCK-----")
+		assert.Contains(t, string(existingSecret.Data["keyfile.pub"]), "-----BEGIN PGP PUBLIC KEY BLOCK-----")
+		assert.Contains(t, string(existingSecret.Data["e-mail.txt"]), "antifa@antifa.cz")
 	}
-
 }

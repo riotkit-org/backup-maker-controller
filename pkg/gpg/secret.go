@@ -33,10 +33,10 @@ func CreateNewGPGSecret(name string, namespace string, email string, owners []me
 }
 
 func UpdateGPGSecretWithRecreatedGPGKey(secret *v1.Secret, spec *v1alpha1.GPGKeySecretSpec, email string, force bool) error {
-	if secret.StringData == nil {
-		secret.StringData = make(map[string]string, 0)
+	if secret.Data == nil {
+		secret.Data = make(map[string][]byte, 0)
 	}
-	secret.StringData[spec.GetEmailIndex()] = email
+	secret.Data[spec.GetEmailIndex()] = []byte(email)
 
 	if !shouldUpdate(secret, spec) && !force {
 		return nil
@@ -47,9 +47,9 @@ func UpdateGPGSecretWithRecreatedGPGKey(secret *v1.Secret, spec *v1alpha1.GPGKey
 		return errors.Wrap(err, "cannot generate a new identity")
 	}
 
-	secret.StringData[spec.GetPassphraseIndex()] = ""
-	secret.StringData[spec.GetPublicKeyIndex()] = string(pubKey)
-	secret.StringData[spec.GetPrivateKeyIndex()] = string(privateKey)
+	secret.Data[spec.GetPassphraseIndex()] = []byte("")
+	secret.Data[spec.GetPublicKeyIndex()] = []byte(pubKey)
+	secret.Data[spec.GetPrivateKeyIndex()] = []byte(privateKey)
 
 	return nil
 }
