@@ -63,10 +63,7 @@ func (in *GPGKeySecretSpec) GetPassphraseIndex() string {
 }
 
 func (in *GPGKeySecretSpec) GetEmailIndex() string {
-	if in.Email == "" {
-		return "e-mail.txt"
-	}
-	return in.Email
+	return "e-mail.txt"
 }
 
 // TokenSecretSpec represents .spec.tokenSecretRef
