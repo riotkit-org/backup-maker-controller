@@ -39,7 +39,9 @@ func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable
 	}(dir)
 
 	// Write backup/restore procedure template
-	templatePath := "./templates/backup/" + backup.GetTemplate().Name + ".tmpl"
+	// Extracts `kind: ClusterBackupProcedureTemplate` into a local file
+	_ = os.MkdirAll("./templates/"+operation, 0755)
+	templatePath := "./templates/" + operation + "/" + backup.GetTemplate().Name + ".tmpl"
 	if writeErr := writeTemplate(backup.GetTemplate(), operation, templatePath); writeErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(writeErr, fmt.Sprintf("cannot write template at path '%s'", templatePath))
 	}

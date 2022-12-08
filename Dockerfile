@@ -16,7 +16,7 @@ COPY cmd/ cmd/
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
-RUN mkdir -p ./templates/backup && chown 65532:65532 -R ./templates && chmod 700 -R ./templates
+RUN mkdir -p ./templates/backup ./templates/restore && chown 65532:65532 -R ./templates && chmod 700 -R ./templates
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
