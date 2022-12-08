@@ -44,7 +44,7 @@ spec:
         export BM_COLLECTION_ID="{{ "{{" }} .Repository.collectionId }}";
         export BM_PASSPHRASE="{{ "{{" }} .Repository.passphrase }}";
         
-        echo " >> Executing restore command and uploading piped result"
+        echo " >> Executing restore command and downloading piped result"
         echo " >> Restoring version: ${selectedVersion}"
         
         exec backup-maker restore --url "{{ "{{" }} .Repository.url }}" \
