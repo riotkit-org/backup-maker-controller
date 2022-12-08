@@ -1,4 +1,4 @@
-{{ $pgVersions := list "pg11" "pg12" "pg13" "pg14" }}
+{{ $pgVersions := list "pg11" "pg12" "pg13" "pg14" "pg15" }}
 
 {{ range $num, $pgVersion := $pgVersions }}
 ---
