@@ -320,6 +320,8 @@ github.com/riotkit-org/br-backup-maker v0.0.0-20221203165056-cbf94b94045a h1:AWt
 github.com/riotkit-org/br-backup-maker v0.0.0-20221203165056-cbf94b94045a/go.mod h1:jMszmlkYkXKJ6MnI1EckJZsfZHq+UnFHXxtdnq4OGmQ=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221203165519-c378e4a1648f h1:N2HM/fCrj+YSDcpWTry0+aiGZSJJILL0XmnOjZY22hg=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221203165519-c378e4a1648f/go.mod h1:jMszmlkYkXKJ6MnI1EckJZsfZHq+UnFHXxtdnq4OGmQ=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221208140108-d9bf721f5b2a h1:CvSQHVB8Zu2HyUKa3MWIsn56oADCDmFSsA8sBfktwIQ=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221208140108-d9bf721f5b2a/go.mod h1:jMszmlkYkXKJ6MnI1EckJZsfZHq+UnFHXxtdnq4OGmQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shopspring/decimal v1.2.0 h1:abSATXmQEYyShuxI4/vyW3tV1MrKAJzCZ/0zLUXYbsQ=
