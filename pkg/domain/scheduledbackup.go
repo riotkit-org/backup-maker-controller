@@ -3,7 +3,6 @@ package domain
 import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -18,10 +17,6 @@ type ScheduledBackupAggregate struct {
 	TokenSecret        *v1.Secret
 	VarsListSecret     *v1.Secret
 	AdditionalVarsList AdditionalVarsList
-}
-
-func (sb ScheduledBackupAggregate) AcceptedResourceTypes() []metav1.GroupVersionKind {
-	return []metav1.GroupVersionKind{}
 }
 
 func (sb ScheduledBackupAggregate) GetOperation() string {
