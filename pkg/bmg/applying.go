@@ -31,6 +31,10 @@ func ApplyScheduledBackup(ctx context.Context, logger *logrus.Entry, recorder re
 	for _, doc := range rendered {
 		apiVersion, kind := doc.GroupVersionKind().ToAPIVersionAndKind()
 		logger.Infof("Applying %s, kind: %s, %s/%s", apiVersion, kind, doc.GetNamespace(), doc.GetName())
+
+		// mark a resource with a unique identifier in the label
+		v1alpha1.AppendJobIdTo(&doc)
+
 		if err := CreateOrUpdate(ctx, recorder, dynClient, restCfg, &doc, backup.GetScheduledBackup()); err != nil {
 			return errors.Wrap(err, "cannot apply manifest to the cluster")
 		}
@@ -63,9 +67,6 @@ func addOwnerReferences(logger *logrus.Entry, doc *unstructured.Unstructured, ba
 }
 
 func addChildReferences(doc *unstructured.Unstructured, backup domain.Renderable) {
-	// mark a resource with a unique identifier in the label
-	v1alpha1.AppendJobIdTo(doc)
-
 	// add that resource to the ChildrenReferences field for the parent, so the parent
 	// could find all of its resources using a previously generated set of labels
 	backup.AddOwnedObject(doc)
