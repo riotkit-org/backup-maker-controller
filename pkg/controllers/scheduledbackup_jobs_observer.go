@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"time"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -46,6 +47,13 @@ func (r *JobsManagedByScheduledBackupObserver) Reconcile(ctx context.Context, re
 	// Collect the report about all managed resources in our context
 	ownedReferences := aggregate.GetReferencesOfOwnedObjects()
 	report, healthy, err := createOwnedReferencesHealthReport(ctx, ownedReferences, r.Integrations, logger, req.Namespace)
+
+	// The Jobs are still running, wait for them to be finished
+	for _, healthStatus := range report {
+		if healthStatus.Running {
+			return ctrl.Result{RequeueAfter: time.Second * 10}, nil
+		}
+	}
 
 	// Update the status
 	r.updateStatus(ctx, logger, aggregate, report, healthy)

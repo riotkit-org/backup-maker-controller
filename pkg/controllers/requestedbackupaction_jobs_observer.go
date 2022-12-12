@@ -16,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"time"
 )
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,8 +36,6 @@ func (r *JobsManagedByRequestedBackupActionObserver) Reconcile(ctx context.Conte
 		"name":       req.NamespacedName,
 		"controller": "JobsManagedByRequestedBackupActionObserver",
 	})
-	logger.Info("Reconciling children")
-
 	// Fetch and populate the context
 	aggregate, _, err := factory.FetchRBAAggregate(ctx, r.Fetcher, r.Client, logger, req)
 	if err != nil {
@@ -46,6 +45,13 @@ func (r *JobsManagedByRequestedBackupActionObserver) Reconcile(ctx context.Conte
 	// Collect the report about all managed resources in our context
 	ownedReferences := aggregate.GetReferencesOfOwnedObjects()
 	report, healthy, err := createOwnedReferencesHealthReport(ctx, ownedReferences, r.Integrations, logger, req.Namespace)
+
+	// The Jobs are still running, wait for them to be finished
+	for _, healthStatus := range report {
+		if healthStatus.Running {
+			return ctrl.Result{RequeueAfter: time.Second * 10}, nil
+		}
+	}
 
 	// Update the status
 	r.updateStatus(ctx, aggregate, report, healthy, logger)
@@ -73,7 +79,6 @@ func (r *JobsManagedByRequestedBackupActionObserver) updateStatus(ctx context.Co
 func (r *JobsManagedByRequestedBackupActionObserver) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&riotkitorgv1alpha1.RequestedBackupAction{}).
-		//For(&riotkitorgv1alpha1.ScheduledBackup{}).
 		Owns(&batchv1.Job{}).
 		Owns(&batchv1.CronJob{}).
 		WithEventFilter(predicate.Funcs{
