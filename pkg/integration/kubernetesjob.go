@@ -32,12 +32,14 @@ func (kj KubernetesJobResourceType) GetScheduledJobHealthStatus(ctx context.Cont
 	}
 
 	var running = false
+	if len(list.Items) == 0 {
+		return v1alpha1.JobHealthStatus{}, errors.New(fmt.Sprintf("cannot find any job labelled with %s=%s", v1alpha1.LabelTrackingId, trackingId))
+	}
 
 	// iterate over all labelled jobs - we mostly expect a one object there
 	// but in case, when Backup Repository Client would produce more objects we are prepared for it
 	for _, job := range list.Items {
 		if job.Status.Failed > 0 {
-
 			// if at least one job fails, then our workflow has failed and needs to be repeated
 			return v1alpha1.JobHealthStatus{
 				ChildReference: v1alpha1.ChildReference{
