@@ -3,7 +3,7 @@ module github.com/riotkit-org/backup-maker-operator
 go 1.19
 
 require (
-	github.com/ProtonMail/go-crypto v0.0.0-20220930113650-c6815a8c17ad
+	github.com/ProtonMail/gopenpgp/v2 v2.4.10
 	github.com/ohler55/ojg v1.14.5
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.24.1
@@ -11,7 +11,6 @@ require (
 	github.com/riotkit-org/br-backup-maker v0.0.0-20221210090929-af5ef38f7355
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
@@ -20,8 +19,11 @@ require (
 )
 
 require (
+	github.com/ProtonMail/go-crypto v0.0.0-20220930113650-c6815a8c17ad // indirect
+	github.com/ProtonMail/go-mime v0.0.0-20220302105931-303f85f7fe0f // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
 )
 
 require (
