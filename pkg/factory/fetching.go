@@ -56,7 +56,7 @@ func FetchSBAggregate(ctx context.Context, cf CachedFetcher, c client.Client, lo
 	}
 	f := NewFactory(c, cf, logger)
 	aggregate, _, hydrateErr := f.CreateScheduledBackupAggregate(
-		ctx, backup,
+		ctx, backup, "",
 	)
 	return aggregate, hydrateErr
 }

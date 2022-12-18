@@ -80,7 +80,7 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	if backup.HasSpecChanged() && !backup.IsBeingReconciledAlready() {
 		f := factory.NewFactory(r.Client, r.Fetcher, logger)
 		aggregate, controllerAction, hydrateErr := f.CreateScheduledBackupAggregate(
-			ctx, backup,
+			ctx, backup, "",
 		)
 
 		r.updateObject(ctx, aggregate, metav1.Condition{

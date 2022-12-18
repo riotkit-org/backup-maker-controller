@@ -26,7 +26,7 @@ func NewFactory(client client.Client, fetcher CachedFetcher, logger *logrus.Entr
 }
 
 // CreateScheduledBackupAggregate is creating a fully hydrated object (aggregate) with all dependencies inside
-func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1alpha1.ScheduledBackup) (*domain.ScheduledBackupAggregate, error, error) {
+func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1alpha1.ScheduledBackup, operation string) (*domain.ScheduledBackupAggregate, error, error) {
 	aggregate := domain.ScheduledBackupAggregate{ScheduledBackup: backup}
 	aggregate.AdditionalVarsList = make(map[string][]byte)
 
@@ -56,7 +56,10 @@ func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1
 	//
 	// .Values.gpgKeyContent is a source of GPG key (public or private - depends on the operation)
 	//
-	if aggregate.Spec.Operation == "backup" {
+	if operation == "" {
+		operation = aggregate.Spec.Operation
+	}
+	if operation == "backup" {
 		aggregate.AdditionalVarsList["HelmValues.gpgKeyContent"] = aggregate.GPGSecret.Data[aggregate.Spec.GPGKeySecretRef.PublicKey]
 	} else {
 		aggregate.AdditionalVarsList["HelmValues.gpgKeyContent"] = aggregate.GPGSecret.Data[aggregate.Spec.GPGKeySecretRef.PrivateKey]
@@ -67,7 +70,7 @@ func (c *Factory) CreateScheduledBackupAggregate(ctx context.Context, backup *v1
 
 // CreateRequestedBackupActionAggregate is creating a fully hydrated object (aggregate) with all dependencies inside
 func (c *Factory) CreateRequestedBackupActionAggregate(ctx context.Context, action *v1alpha1.RequestedBackupAction, scheduledBackup *v1alpha1.ScheduledBackup) (*domain.RequestedBackupActionAggregate, error, error) {
-	scheduledBackupAggregate, _, fetchErr := c.CreateScheduledBackupAggregate(ctx, scheduledBackup)
+	scheduledBackupAggregate, _, fetchErr := c.CreateScheduledBackupAggregate(ctx, scheduledBackup, action.Spec.Action)
 	a := domain.NewRequestedBackupActionAggregate(action, scheduledBackupAggregate)
 	if fetchErr != nil {
 		return a, ErrorActionRequeue, fetchErr
