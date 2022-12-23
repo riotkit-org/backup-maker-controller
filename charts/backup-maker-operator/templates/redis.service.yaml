@@ -1,0 +1,17 @@
+{{ if and $.Values.redis.deploy $.Values.redis.serviceAccount.create }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: {{ include "controller.fullname" . }}-redis
+    labels:
+        app: {{ include "controller.fullname" . }}-redis
+spec:
+    ports:
+        - name: redis
+          port: {{ $.Values.redis.port }}
+          protocol: TCP
+          targetPort: redis
+    selector:
+        app: {{ include "controller.fullname" . }}-redis
+{{ end }}

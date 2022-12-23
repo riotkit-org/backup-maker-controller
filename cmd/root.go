@@ -6,6 +6,7 @@ import (
 	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
 	"github.com/riotkit-org/backup-maker-operator/pkg/integration"
+	"github.com/riotkit-org/backup-maker-operator/pkg/locking"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,6 +41,9 @@ func NewRootCommand() *cobra.Command {
 	command.Flags().StringVarP(&app.healthProbeBindAddress, "health-probe-bind-address", "p", ":8081", "Host + Port on which to bind healthcheck endpoint to")
 	command.Flags().BoolVarP(&app.leaderElect, "leader-elect", "l", false, "Enable leader election? Use in HA mode")
 	command.Flags().BoolVarP(&app.zapDevel, "zap-devel", "", false, "Enable development mode for Zap")
+	command.Flags().StringVarP(&app.redisHost, "redis-host", "", "redis", "Redis hostname or IP address")
+	command.Flags().IntVarP(&app.redisPort, "redis-port", "", 6379, "Redis port number")
+	command.Flags().BoolVarP(&app.disableRedis, "disable-redis", "", false, "Disable redis and use in-memory locking mechanism (does not work for multiple instances of the controller)")
 
 	return command
 }
@@ -50,6 +54,9 @@ type App struct {
 	healthProbeBindAddress string
 	leaderElect            bool
 	zapDevel               bool
+	redisHost              string
+	redisPort              int
+	disableRedis           bool
 }
 
 var (
@@ -67,6 +74,14 @@ func (a *App) Run() error {
 	if a.debug {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
+
+	var locker locking.Locker
+	if a.disableRedis {
+		locker = locking.NewInMemoryLocker()
+	} else {
+		locker = locking.NewRedisDistributedLocker("tcp", a.redisHost, a.redisPort)
+	}
+	defer locker.Close()
 
 	// zap logger is used by KubeBuilder
 	ctrl.SetLogger(zap.New(
@@ -135,6 +150,7 @@ func (a *App) Run() error {
 		RestCfg:   kubeconfig,
 		Fetcher:   fetcher,
 		Recorder:  recorder,
+		Locker:    locker,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "RequestedBackupAction")
 		return err
@@ -145,6 +161,7 @@ func (a *App) Run() error {
 		Fetcher:      fetcher,
 		BRClient:     brClient,
 		Client:       mgr.GetClient(),
+		Locker:       locker,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "JobsManagedByRequestedBackupActionObserver")
 		return err

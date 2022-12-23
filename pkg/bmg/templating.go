@@ -141,8 +141,6 @@ func writeDefinition(logger *logrus.Entry, backup *domain.ScheduledBackupAggrega
 		return errors.Wrap(err, "cannot parse .spec.vars as YAML")
 	}
 
-	logger.Debugf("backup.AdditionalVarsList = %v", backup.AdditionalVarsList)
-
 	// each entry from Kubernetes secret convert into a YAML value
 	// by converting a dotted path into a map
 	varSources := make([]map[string][]byte, 0)

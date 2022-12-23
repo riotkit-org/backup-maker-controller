@@ -24,6 +24,7 @@ import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"github.com/riotkit-org/backup-maker-operator/pkg/locking"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,6 +53,7 @@ type RequestedBackupActionReconciler struct {
 	Cache     cache.Cache
 	Fetcher   factory.CachedFetcher
 	Recorder  record.EventRecorder
+	Locker    locking.Locker
 }
 
 func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, logger *logrus.Entry, req ctrl.Request) (*domain.RequestedBackupActionAggregate, ctrl.Result, error) {
@@ -64,13 +66,25 @@ func (r *RequestedBackupActionReconciler) fetchAggregate(ctx context.Context, lo
 
 // Reconcile main loop for RequestedBackupAction controller
 func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := logrus.WithContext(ctx).WithFields(map[string]interface{}{
-		"name":       req.NamespacedName,
-		"controller": "RequestedBackupActionReconciler",
-	})
+	logger := createLogger(ctx, req, "RequestedBackupActionReconciler")
 	logger.Debugf("Processing %s/%s", req.Name, req.Namespace)
 
+	//
+	// 0. Do not allow doing same action multiple times at the same moment
+	//
+	lock := r.Locker.Obtain(ctx, req)
+	if lock.AlreadyLocked() {
+		logger.Infoln("Already processed, requeuing")
+		return ctrl.Result{RequeueAfter: time.Second * 10}, nil
+	}
+	if lock.HasFailure() {
+		return ctrl.Result{}, lock.GetError()
+	}
+	defer r.Locker.Done(ctx, lock)
+
+	//
 	// 1. Fetch all required objects
+	//
 	aggregate, ctrlResult, err := r.fetchAggregate(ctx, logger, req)
 	if err != nil {
 		return ctrlResult, err
@@ -85,7 +99,9 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 		return ctrl.Result{}, nil
 	}
 
+	//
 	// 2. Template & Create selected resources (only `kind: Job` type resources. The rest like Secrets and ConfigMaps we expect will be there already, created by ScheduledBackup)
+	//
 	if applyErr := bmg.ApplyScheduledBackup(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
 		r.updateObjectStatus(ctx, logger, aggregate, metav1.Condition{
 			Status:  "False",
@@ -95,7 +111,9 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 		return ctrl.Result{RequeueAfter: time.Second * 30}, applyErr
 	}
 
+	//
 	// 3. Update - mark as processed, update status and send notification event
+	//
 	logger.Debug("Marking resource as processed")
 	aggregate.MarkAsProcessed()
 

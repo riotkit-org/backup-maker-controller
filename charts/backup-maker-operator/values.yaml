@@ -24,3 +24,23 @@ securityContext:
 serviceAccount:
     name: backup-maker-operator
     create: true
+
+# -- Redis settings. If disabled, then in-memory locking mechanism will be used (works only when replicas = 1, for replicas > 1 use Redis)
+redis:
+    deploy: false
+    image:
+        repository: ghcr.io/mirrorshub/docker/redis
+        tag: 7.0.7-alpine
+        pullPolicy: IfNotPresent
+
+    # -- when: deploy = false and enable = true, then set custom hostname and port
+    #host: "" # defaults to the hostname of Redis deployed by this Helm Chart
+    port: 6379
+
+    enable: false
+    terminationGracePeriodSeconds: 10
+    serviceAccount:
+        name: backup-maker-operator-redis
+        create: true
+
+    resources: {}

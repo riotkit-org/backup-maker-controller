@@ -1,0 +1,38 @@
+{{ if $.Values.redis.deploy }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: {{ include "controller.fullname" . }}-redis
+    labels:
+        app: {{ include "controller.fullname" . }}-redis
+spec:
+    selector:
+        matchLabels:
+            app: {{ include "controller.fullname" . }}-redis
+    replicas: 1
+    template:
+        metadata:
+            annotations:
+                kubectl.kubernetes.io/default-container: redis
+            labels:
+                app: {{ include "controller.fullname" . }}-redis
+        spec:
+            serviceAccountName: {{ $.Values.redis.serviceAccount.name }}
+            terminationGracePeriodSeconds: {{ .Values.redis.terminationGracePeriodSeconds }}
+            restartPolicy: Always
+            containers:
+                - name: redis
+                  image: {{ $.Values.redis.image.repository }}:{{ $.Values.redis.image.tag }}
+                  ports:
+                      - containerPort: {{ $.Values.redis.port }}
+                        name: redis
+                  imagePullPolicy: {{ $.Values.redis.image.pullPolicy }}
+                  securityContext:
+                      allowPrivilegeEscalation: false
+                  resources:
+                      {{- toYaml .Values.redis.resources | nindent 22 }}
+                  env:
+                      - name: ALLOW_EMPTY_PASSWORD
+                        value: yes
+{{ end }}

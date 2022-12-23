@@ -24,9 +24,15 @@ spec:
                 - name: manager
                   command:
                       - /manager
-                  {{ if gt (int $.Values.replicas) 1 }}
                   args:
+                  {{ if gt (int $.Values.replicas) 1 }}
                       - --leader-elect
+                  {{ end }}
+                  {{ if not $.Values.redis.enable }}
+                      - --disable-redis
+                  {{ else }}
+                      - --redis-host={{ $.Values.redis.host | default (printf "%s-redis.%s.svc.cluster.local" (include "controller.fullname" $) .Release.Namespace) }}
+                      - --redis-port={{ $.Values.redis.port | default "6379" }}
                   {{ end }}
                   imagePullPolicy: {{ $.Values.image.pullPolicy }}
                   image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}

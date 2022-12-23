@@ -21,3 +21,16 @@ deploy:
                   installCRD: "false"
                   image.repository: 'bm-registry:5000/backup-maker-operator'
                   image.tag: '{{.IMAGE_TAG}}'
+
+profiles:
+    # ============================================================
+    # Uses built-in Redis instead of in-memory locking mechanisms
+    # ============================================================
+    - name: redis
+      patches:
+          - op: add
+            path: /deploy/helm/releases/0/setValueTemplates/redis.enable
+            value: true
+          - op: add
+            path: /deploy/helm/releases/0/setValueTemplates/redis.deploy
+            value: true
