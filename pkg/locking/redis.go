@@ -24,7 +24,7 @@ func (rdl *RedisDistributedLocker) Obtain(ctx context.Context, req ctrl.Request)
 }
 
 func (rdl *RedisDistributedLocker) Done(ctx context.Context, session LockSession) {
-	lock := session.id.(redislock.Lock)
+	lock := session.id.(*redislock.Lock)
 	_ = lock.Release(ctx)
 }
 
