@@ -137,6 +137,7 @@ func (a *App) Run() error {
 		DynClient: dynClient,
 		Fetcher:   factory.CachedFetcher{Cache: mgr.GetCache(), Client: brClient},
 		Recorder:  recorder,
+		Locker:    locker,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ScheduledBackup")
 		return err
@@ -171,6 +172,7 @@ func (a *App) Run() error {
 		Fetcher:      fetcher,
 		BRClient:     brClient,
 		Client:       mgr.GetClient(),
+		Locker:       locker,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "JobsManagedByScheduledBackupObserver")
 		return err

@@ -24,6 +24,7 @@ import (
 	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
 	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
+	"github.com/riotkit-org/backup-maker-operator/pkg/locking"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +52,7 @@ type ScheduledBackupReconciler struct {
 	Cache     cache.Cache
 	Fetcher   factory.CachedFetcher
 	Recorder  record.EventRecorder
+	Locker    locking.Locker
 }
 
 // +kubebuilder:rbac:groups=,resources=secrets,verbs=get;list;watch
@@ -64,6 +66,19 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		"name":       req.NamespacedName,
 		"controller": "ScheduledBackupReconciler",
 	})
+
+	//
+	// 0. Do not allow doing same action multiple times at the same moment
+	//
+	lock := r.Locker.Obtain(ctx, req)
+	if lock.AlreadyLocked() {
+		logger.Infoln("Already processed, requeuing")
+		return ctrl.Result{RequeueAfter: time.Second * 10}, nil
+	}
+	if lock.HasFailure() {
+		return ctrl.Result{}, lock.GetError()
+	}
+	defer r.Locker.Done(ctx, lock)
 
 	// todo: support case, when cron=false. Then do not create CronJob or Job objects. Such case would mean manual triggering of the backup process
 	// todo: backup rotation - basing on the server settings?
