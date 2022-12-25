@@ -7,6 +7,7 @@ import (
 )
 
 type Renderable interface {
+	AcceptedResourceTypes() []v1.GroupVersionKind
 	GetOperation() string
 	GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate
 	GetScheduledBackup() *v1alpha1.ScheduledBackup

@@ -9,6 +9,7 @@ import (
 	"github.com/riotkit-org/br-backup-maker/generate"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	apiyaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"os"
@@ -77,7 +78,7 @@ func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable
 	if genErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(genErr, "error while generating manifests")
 	}
-	return readRenderedManifests(logger, dir+"/output/"+operation+".yaml")
+	return readRenderedManifests(logger, dir+"/output/"+operation+".yaml", backup.AcceptedResourceTypes())
 }
 
 // writeTemplate is writing the backup/restore procedure template
@@ -93,7 +94,7 @@ func writeTemplate(template *v1alpha1.ClusterBackupProcedureTemplate, operation 
 }
 
 // readRenderedManifests is reading manifests from YAML into []UnstructuredObject
-func readRenderedManifests(logger *logrus.Entry, manifestPath string) ([]unstructured.Unstructured, error) {
+func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRender []v1.GroupVersionKind) ([]unstructured.Unstructured, error) {
 	// reading
 	content, readErr := os.ReadFile(manifestPath)
 	if readErr != nil {
@@ -118,6 +119,27 @@ func readRenderedManifests(logger *logrus.Entry, manifestPath string) ([]unstruc
 		var obj unstructured.Unstructured
 		if _, _, unmarshalErr := decoder.Decode([]byte(doc), nil, &obj); unmarshalErr != nil {
 			return []unstructured.Unstructured{}, errors.Wrap(unmarshalErr, "cannot parse rendered YAML")
+		}
+
+		// Optionally: We can be rendering only selected types of objects, e.g. only "kind: Job"
+		if len(kindsToRender) > 0 {
+			logger.Debug("Going to use a filter to keep only selected types of resources")
+
+			gvk := obj.GroupVersionKind()
+			found := false
+			logger.Debugf("Current kind: %v, allowed kinds: %v", gvk.String(), kindsToRender)
+
+			for _, search := range kindsToRender {
+				if gvk.String() == search.String() {
+					logger.Debug("Matched.")
+					found = true
+					break
+				}
+			}
+			if !found {
+				logger.Debugf("Skipping not matching the filter: %v", gvk.String())
+				continue
+			}
 		}
 
 		objects = append(objects, obj)

@@ -26,7 +26,7 @@ func ApplyScheduledBackup(ctx context.Context, logger *logrus.Entry, recorder re
 	}
 
 	if len(rendered) == 0 {
-		return errors.Errorf("no objects rendered, no objects to apply. Please check your template.")
+		return errors.Errorf("no objects rendered, no objects to apply. Please check your template - it did not render any of those objects: %v", backup.AcceptedResourceTypes())
 	}
 	for _, doc := range rendered {
 		apiVersion, kind := doc.GroupVersionKind().ToAPIVersionAndKind()
