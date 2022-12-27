@@ -9,7 +9,6 @@ import (
 	"github.com/riotkit-org/br-backup-maker/generate"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	apiyaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"os"
@@ -17,9 +16,37 @@ import (
 	"strings"
 )
 
-// RenderKubernetesResourcesFor is rendering Kubernetes resources like CronJob, Job, Secret, ConfigMap using Backup Maker Generator (BMG), which is using Helm under the hood
 func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable) ([]unstructured.Unstructured, error) {
-	operation := backup.GetOperation()
+	//
+	// Render helper resources for all operation types: "restore" + "backup"
+	// This in effect will create e.g. separate ConfigMap, Secret for "restore" and separate for "backup"
+	//
+	// Typically a `kind: ScheduledBackup` is rendering all helper objects (Secret/ConfigMap)
+	// And `kind: CronJob` for `kind: ScheduledBackup`
+	//
+	if backup.ShouldRenderDependentObjectsForAllOperationTypes() {
+		var rendered []unstructured.Unstructured
+		for _, operation := range []domain.Operation{domain.Backup, domain.Restore} {
+			opRendered, renderErr := RenderKubernetesResourcesForOperation(logger, backup, operation,
+				domain.NewResourceTypesFilterForScheduledBackup(backup, operation))
+
+			if renderErr != nil {
+				return []unstructured.Unstructured{}, renderErr
+			}
+			rendered = append(rendered, opRendered...)
+		}
+		return rendered, nil
+	}
+	//
+	// Render runtime resources e.g. `kind: Job` that runs immediately
+	//
+	return RenderKubernetesResourcesForOperation(logger, backup, backup.GetOperation(),
+		domain.NewResourceTypesFilterForRequestedBackupAction())
+}
+
+// RenderKubernetesResourcesForOperation is rendering Kubernetes resources like CronJob, Job, Secret, ConfigMap using Backup Maker Generator (BMG), which is using Helm under the hood
+func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.Renderable,
+	operation domain.Operation, acceptedResourceTypes domain.ResourceTypes) ([]unstructured.Unstructured, error) {
 
 	// Create a temporary workspace directory
 	pwd, _ := os.Getwd()
@@ -40,8 +67,8 @@ func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable
 
 	// Write backup/restore procedure template
 	// Extracts `kind: ClusterBackupProcedureTemplate` into a local file
-	_ = os.MkdirAll("./templates/"+operation, 0755)
-	templatePath := "./templates/" + operation + "/" + backup.GetTemplate().Name + ".tmpl"
+	_ = os.MkdirAll("./templates/"+string(operation), 0755)
+	templatePath := "./templates/" + string(operation) + "/" + backup.GetTemplate().Name + ".tmpl"
 	if writeErr := writeTemplate(backup.GetTemplate(), operation, templatePath); writeErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(writeErr, fmt.Sprintf("cannot write template at path '%s'", templatePath))
 	}
@@ -71,30 +98,30 @@ func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable
 		Schedule:       backup.GetScheduledBackup().Spec.CronJob.ScheduleEvery,
 		JobName:        backup.GetScheduledBackup().Name,
 		Image:          backup.GetTemplate().Spec.Image,
-		Operation:      operation,
+		Operation:      string(operation),
 		Namespace:      backup.GetScheduledBackup().Namespace,
 	}
 	genErr := cmd.Run()
 	if genErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(genErr, "error while generating manifests")
 	}
-	return readRenderedManifests(logger, dir+"/output/"+operation+".yaml", backup.AcceptedResourceTypes())
+	return readRenderedManifests(logger, dir+"/output/"+string(operation)+".yaml", acceptedResourceTypes)
 }
 
 // writeTemplate is writing the backup/restore procedure template
-func writeTemplate(template *v1alpha1.ClusterBackupProcedureTemplate, operation string, path string) error {
+func writeTemplate(template *v1alpha1.ClusterBackupProcedureTemplate, operation domain.Operation, path string) error {
 	_ = os.MkdirAll(filepath.Dir(path), 0700)
 
 	content := template.Spec.Restore
 	// todo: enum
-	if operation == "backup" {
+	if operation == domain.Backup {
 		content = template.Spec.Backup
 	}
 	return os.WriteFile(path, []byte(content), 0700)
 }
 
 // readRenderedManifests is reading manifests from YAML into []UnstructuredObject
-func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRender []v1.GroupVersionKind) ([]unstructured.Unstructured, error) {
+func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRender domain.ResourceTypes) ([]unstructured.Unstructured, error) {
 	// reading
 	content, readErr := os.ReadFile(manifestPath)
 	if readErr != nil {
@@ -122,14 +149,14 @@ func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRen
 		}
 
 		// Optionally: We can be rendering only selected types of objects, e.g. only "kind: Job"
-		if len(kindsToRender) > 0 {
+		if len(kindsToRender.GetKinds()) > 0 {
 			logger.Debug("Going to use a filter to keep only selected types of resources")
 
 			gvk := obj.GroupVersionKind()
 			found := false
 			logger.Debugf("Current kind: %v, allowed kinds: %v", gvk.String(), kindsToRender)
 
-			for _, search := range kindsToRender {
+			for _, search := range kindsToRender.GetKinds() {
 				if gvk.String() == search.String() {
 					logger.Debug("Matched.")
 					found = true
@@ -148,10 +175,12 @@ func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRen
 }
 
 // writeGPGKey is extracting a proper GPG key from Kubernetes Secret and writing down to the temporary file
-func writeGPGKey(backup *domain.ScheduledBackupAggregate, writeToPath string, operation string) error {
+func writeGPGKey(backup *domain.ScheduledBackupAggregate, writeToPath string, operation domain.Operation) error {
 	keyName := backup.Spec.GPGKeySecretRef.PrivateKey
-	if operation == "backup" {
+	backup.AdditionalVarsList["HelmValues.gpgKeyContent"] = backup.GPGSecret.Data[backup.Spec.GPGKeySecretRef.PrivateKey]
+	if operation == domain.Backup {
 		keyName = backup.Spec.GPGKeySecretRef.PublicKey
+		backup.AdditionalVarsList["HelmValues.gpgKeyContent"] = backup.GPGSecret.Data[backup.Spec.GPGKeySecretRef.PublicKey]
 	}
 	return os.WriteFile(writeToPath, backup.GPGSecret.Data[keyName], 0700)
 }

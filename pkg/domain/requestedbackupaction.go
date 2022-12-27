@@ -50,8 +50,12 @@ func (a RequestedBackupActionAggregate) AcceptedResourceTypes() []v1.GroupVersio
 	}
 }
 
-func (a RequestedBackupActionAggregate) GetOperation() string {
-	return a.Spec.Action
+func (a RequestedBackupActionAggregate) GetOperation() Operation {
+	return Operation(a.Spec.Action)
+}
+
+func (sb RequestedBackupActionAggregate) ShouldCreateCronJob() bool {
+	return false
 }
 
 func (a RequestedBackupActionAggregate) GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate {
@@ -77,6 +81,10 @@ func (a RequestedBackupActionAggregate) GetObjectForOwnerReference() KubernetesR
 // AddOwnedObject is adding a child element
 func (a *RequestedBackupActionAggregate) AddOwnedObject(doc *unstructured.Unstructured) {
 	v1alpha1.AddOwnedObject(&a.Status.OwnedReferences, doc)
+}
+
+func (a *RequestedBackupActionAggregate) ShouldRenderDependentObjectsForAllOperationTypes() bool {
+	return false
 }
 
 func NewRequestedBackupActionAggregate(action *v1alpha1.RequestedBackupAction, scheduled *ScheduledBackupAggregate) *RequestedBackupActionAggregate {

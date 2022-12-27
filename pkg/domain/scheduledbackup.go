@@ -24,8 +24,12 @@ func (sb ScheduledBackupAggregate) AcceptedResourceTypes() []metav1.GroupVersion
 	return []metav1.GroupVersionKind{}
 }
 
-func (sb ScheduledBackupAggregate) GetOperation() string {
-	return sb.Spec.Operation
+func (sb ScheduledBackupAggregate) GetOperation() Operation {
+	return Operation(sb.Spec.Operation)
+}
+
+func (sb ScheduledBackupAggregate) ShouldCreateCronJob() bool {
+	return sb.Spec.CronJob.Enabled
 }
 
 func (sb ScheduledBackupAggregate) GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate {
@@ -51,4 +55,8 @@ func (sb ScheduledBackupAggregate) GetReferencesOfOwnedObjects() v1alpha1.Childr
 // AddOwnedObject is adding a child element
 func (sb *ScheduledBackupAggregate) AddOwnedObject(doc *unstructured.Unstructured) {
 	v1alpha1.AddOwnedObject(&sb.Status.OwnedReferences, doc)
+}
+
+func (sb *ScheduledBackupAggregate) ShouldRenderDependentObjectsForAllOperationTypes() bool {
+	return true
 }
