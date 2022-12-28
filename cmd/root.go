@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
-	"github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
-	controllers2 "github.com/riotkit-org/backup-maker-operator/pkg/controllers"
-	"github.com/riotkit-org/backup-maker-operator/pkg/factory"
-	"github.com/riotkit-org/backup-maker-operator/pkg/integration"
-	"github.com/riotkit-org/backup-maker-operator/pkg/locking"
+	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
+	controllers2 "github.com/riotkit-org/backup-maker-controller/pkg/controllers"
+	"github.com/riotkit-org/backup-maker-controller/pkg/factory"
+	"github.com/riotkit-org/backup-maker-controller/pkg/integration"
+	"github.com/riotkit-org/backup-maker-controller/pkg/locking"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -24,7 +24,7 @@ import (
 func NewRootCommand() *cobra.Command {
 	app := App{}
 	command := &cobra.Command{
-		Use:   "backup-maker-operator",
+		Use:   "backup-maker-controller",
 		Short: "Runs a controller that schedules and monitors Backup & Restore actions in the cluster",
 		Run: func(command *cobra.Command, args []string) {
 			err := app.Run()
@@ -102,7 +102,7 @@ func (a *App) Run() error {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
-	recorder := mgr.GetEventRecorderFor("backup-maker-operator")
+	recorder := mgr.GetEventRecorderFor("backup-maker-controller")
 	kubeconfig, err := buildConfig(os.Getenv("KUBECONFIG"))
 	if err != nil {
 		panic(err.Error())

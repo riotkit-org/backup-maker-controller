@@ -5,7 +5,7 @@ package versioned
 import (
 	"fmt"
 
-	riotkitv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
+	riotkitv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

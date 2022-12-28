@@ -3,9 +3,9 @@
 package fake
 
 import (
-	clientset "github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned"
-	riotkitv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
-	fakeriotkitv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned/typed/riotkit/v1alpha1/fake"
+	clientset "github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned"
+	riotkitv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
+	fakeriotkitv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned/typed/riotkit/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

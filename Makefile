@@ -16,7 +16,7 @@ ifeq ($(USE_IMAGE_DIGESTS), true)
 endif
 
 # Image URL to use all building/pushing image targets
-IMG ?= ghcr.io/riotkit-org/backup-maker-operator:latest
+IMG ?= ghcr.io/riotkit-org/backup-maker-controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.2
 
@@ -108,7 +108,7 @@ helm:
 	done
 	cp ./config/rbac/*_editor_role.yaml helm/templates/
 	cp ./config/rbac/*_viewer_role.yaml helm/templates/
-	role=$$(cat ./config/rbac/role.yaml); echo "$${role/'name: manager-role'/'name: backup-maker-operator-role'}" > helm/templates/controller-role.yaml
+	role=$$(cat ./config/rbac/role.yaml); echo "$${role/'name: manager-role'/'name: backup-maker-controller-role'}" > helm/templates/controller-role.yaml
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
@@ -132,5 +132,5 @@ skaffold-dev:
 
 	export KUBECONFIG=~/.k3d/kubeconfig-bm.yaml
 	kubectl apply -f config/crd/bases
-	kubectl create ns backup-maker-operator || true
-	skaffold dev -n backup-maker-operator --default-repo bm-registry:5000 --tag latest
+	kubectl create ns backup-maker-controller || true
+	skaffold dev -n backup-maker-controller --default-repo bm-registry:5000 --tag latest

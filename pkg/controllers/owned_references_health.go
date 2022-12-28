@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"context"
-	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
-	"github.com/riotkit-org/backup-maker-operator/pkg/integration"
+	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-controller/pkg/integration"
 	"github.com/sirupsen/logrus"
 )
 

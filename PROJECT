@@ -6,7 +6,7 @@ plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: operator
-repo: github.com/riotkit-org/backup-maker-operator
+repo: github.com/riotkit-org/backup-maker-controller
 resources:
 - api:
     crdVersion: v1
@@ -15,7 +15,7 @@ resources:
   domain: riotkit.org
   group: riotkit.org
   kind: ClusterBackupProcedureTemplate
-  path: github.com/riotkit-org/backup-maker-operator/api/v1alpha1
+  path: github.com/riotkit-org/backup-maker-controller/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -24,7 +24,7 @@ resources:
   domain: riotkit.org
   group: riotkit.org
   kind: ScheduledBackup
-  path: github.com/riotkit-org/backup-maker-operator/api/v1alpha1
+  path: github.com/riotkit-org/backup-maker-controller/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -33,5 +33,5 @@ resources:
   domain: riotkit.org
   group: riotkit.org
   kind: RequestedBackupAction
-  path: github.com/riotkit-org/backup-maker-operator/api/v1alpha1
+  path: github.com/riotkit-org/backup-maker-controller/api/v1alpha1
   version: v1alpha1

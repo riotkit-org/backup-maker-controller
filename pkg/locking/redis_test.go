@@ -2,7 +2,7 @@ package locking_test
 
 import (
 	"context"
-	"github.com/riotkit-org/backup-maker-operator/pkg/locking"
+	"github.com/riotkit-org/backup-maker-controller/pkg/locking"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"k8s.io/apimachinery/pkg/types"

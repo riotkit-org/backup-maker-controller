@@ -1,7 +1,7 @@
 package gpg
 
 import (
-	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

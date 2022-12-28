@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/riotkit-org/backup-maker-operator/cmd"
+	"github.com/riotkit-org/backup-maker-controller/cmd"
 	"os"
 )
 

@@ -1,4 +1,4 @@
-module github.com/riotkit-org/backup-maker-operator
+module github.com/riotkit-org/backup-maker-controller
 
 go 1.19
 

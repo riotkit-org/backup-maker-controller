@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	v1 "k8s.io/client-go/kubernetes/typed/batch/v1"

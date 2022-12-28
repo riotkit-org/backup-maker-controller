@@ -7,9 +7,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/riotkit-org/backup-maker-operator/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/riotkit-org/backup-maker-operator/pkg/client/informers/externalversions/internalinterfaces"
-	riotkit "github.com/riotkit-org/backup-maker-operator/pkg/client/informers/externalversions/riotkit"
+	versioned "github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/riotkit-org/backup-maker-controller/pkg/client/informers/externalversions/internalinterfaces"
+	riotkit "github.com/riotkit-org/backup-maker-controller/pkg/client/informers/externalversions/riotkit"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

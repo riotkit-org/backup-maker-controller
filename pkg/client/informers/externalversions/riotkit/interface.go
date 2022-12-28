@@ -3,8 +3,8 @@
 package riotkit
 
 import (
-	internalinterfaces "github.com/riotkit-org/backup-maker-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/client/informers/externalversions/riotkit/v1alpha1"
+	internalinterfaces "github.com/riotkit-org/backup-maker-controller/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/client/informers/externalversions/riotkit/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

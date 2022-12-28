@@ -27,5 +27,5 @@ readonly REPO_NAME="${REPO_NAME:-$(basename ${REPO_ROOT_DIR} 2> /dev/null)}"
 # need to be separated (at least in terms of go package) from the pipeline's packages to
 # not having dependency cycle.
 bash ${REPO_ROOT_DIR}/hack/generate-groups.sh "deepcopy,client,informer,lister" \
-  github.com/riotkit-org/backup-maker-operator/pkg/client github.com/riotkit-org/backup-maker-operator/pkg/apis \
+  github.com/riotkit-org/backup-maker-controller/pkg/client github.com/riotkit-org/backup-maker-controller/pkg/apis \
   "riotkit:v1alpha1"

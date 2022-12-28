@@ -17,7 +17,7 @@ limitations under the License.
 package controllers
 
 import (
-	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
+	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
 	"path/filepath"
 	"testing"
 

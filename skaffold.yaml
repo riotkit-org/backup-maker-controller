@@ -3,7 +3,7 @@ apiVersion: skaffold/v3
 kind: Config
 build:
     artifacts:
-        - image: bm-registry:5000/backup-maker-operator
+        - image: bm-registry:5000/backup-maker-controller
     local:
         push: true
         useBuildkit: true
@@ -12,14 +12,14 @@ build:
 deploy:
     helm:
         releases:
-            - name: backup-maker-operator
-              chartPath: charts/backup-maker-operator
+            - name: backup-maker-controller
+              chartPath: charts/backup-maker-controller
               recreatePods: true
-              namespace: backup-maker-operator
+              namespace: backup-maker-controller
               createNamespace: true
               setValueTemplates:
                   installCRD: "false"
-                  image.repository: 'bm-registry:5000/backup-maker-operator'
+                  image.repository: 'bm-registry:5000/backup-maker-controller'
                   image.tag: '{{.IMAGE_TAG}}'
 
 profiles:

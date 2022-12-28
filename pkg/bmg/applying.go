@@ -3,8 +3,8 @@ package bmg
 import (
 	"context"
 	"github.com/pkg/errors"
-	"github.com/riotkit-org/backup-maker-operator/pkg/apis/riotkit/v1alpha1"
-	"github.com/riotkit-org/backup-maker-operator/pkg/domain"
+	"github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
+	"github.com/riotkit-org/backup-maker-controller/pkg/domain"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"

@@ -56,7 +56,7 @@ export GO111MODULE="off"
 FAKE_GOPATH="$(mktemp -d)"
 trap 'rm -rf ${FAKE_GOPATH} && rm -rf ${REPO_ROOT_DIR}/vendor' EXIT
 
-FAKE_REPOPATH="${FAKE_GOPATH}/src/github.com/riotkit-org/backup-maker-operator"
+FAKE_REPOPATH="${FAKE_GOPATH}/src/github.com/riotkit-org/backup-maker-controller"
 mkdir -p "$(dirname "${FAKE_REPOPATH}")" && ln -s "${REPO_ROOT_DIR}" "${FAKE_REPOPATH}"
 
 export GOPATH="${FAKE_GOPATH}"
