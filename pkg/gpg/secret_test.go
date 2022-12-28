@@ -81,7 +81,7 @@ func TestExistingSecretIsFilledUpWithNewIdentityIfKeysAreMissing(t *testing.T) {
 			Type:       "",
 		}
 
-		err := UpdateGPGSecretWithRecreatedGPGKey(&existingSecret, &spec, "antifa@antifa.cz", false)
+		_, err := UpdateGPGSecretWithRecreatedGPGKey(&existingSecret, &spec, "antifa@antifa.cz", false)
 		assert.Nil(t, err)
 		assert.Contains(t, string(existingSecret.Data["keyfile"]), "-----BEGIN PGP PRIVATE KEY BLOCK-----")
 		assert.Contains(t, string(existingSecret.Data["keyfile.pub"]), "-----BEGIN PGP PUBLIC KEY BLOCK-----")
