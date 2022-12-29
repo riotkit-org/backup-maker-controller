@@ -5,6 +5,7 @@ import (
 	"github.com/riotkit-org/backup-maker-controller/pkg/locking"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"testing"
@@ -19,6 +20,7 @@ func TestRedisDistributedLockerFlow(t *testing.T) {
 	req := testcontainers.ContainerRequest{
 		Image:        "ghcr.io/mirrorshub/docker/redis:7.0.7-alpine",
 		ExposedPorts: []string{"6379/tcp"},
+		WaitingFor:   wait.ForExposedPort(),
 	}
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
