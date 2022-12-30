@@ -44,7 +44,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/riotkit-org/br-backup-maker v0.0.0-20221230122044-6565efd65f0a // indirect
+	github.com/riotkit-org/br-backup-maker v0.0.0-20221230123039-b753ceadf7f8 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
 	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
