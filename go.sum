@@ -770,6 +770,8 @@ github.com/riotkit-org/br-backup-maker v0.0.0-20221227174904-b8db6acf5d39 h1:lpT
 github.com/riotkit-org/br-backup-maker v0.0.0-20221227174904-b8db6acf5d39/go.mod h1:KJ/J237F3oZstH6Pmbtmb+gC45bFvazXBmy0GK5IdCY=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221228225453-eddbd57616a2 h1:mHLPTMkL6+iwUvvvjl97paf1cVExMvboPg5f7fJH+xs=
 github.com/riotkit-org/br-backup-maker v0.0.0-20221228225453-eddbd57616a2/go.mod h1:DeWf9/HpYKspXzxRdKy4aP0N/Vfl5JELumRqx+XYSzA=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221230122044-6565efd65f0a h1:wEgdlC7FcxPzr5FZXNUcSCgkOiKiSM7u4sLS+C13qy0=
+github.com/riotkit-org/br-backup-maker v0.0.0-20221230122044-6565efd65f0a/go.mod h1:DeWf9/HpYKspXzxRdKy4aP0N/Vfl5JELumRqx+XYSzA=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
