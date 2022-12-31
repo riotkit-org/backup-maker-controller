@@ -9,7 +9,7 @@ import (
 type Renderable interface {
 	AcceptedResourceTypes() []v1.GroupVersionKind
 	GetOperation() Operation
-	GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate
+	GetTemplate() Template
 	GetScheduledBackup() *v1alpha1.ScheduledBackup
 	GetBackupAggregate() *ScheduledBackupAggregate
 	GetObjectForOwnerReference() KubernetesResource

@@ -13,7 +13,7 @@ type AdditionalVarsList map[string][]byte
 type ScheduledBackupAggregate struct {
 	*v1alpha1.ScheduledBackup
 
-	Template           *v1alpha1.ClusterBackupProcedureTemplate
+	Template           Template
 	GPGSecret          *v1.Secret
 	TokenSecret        *v1.Secret
 	VarsListSecret     *v1.Secret
@@ -32,7 +32,7 @@ func (sb ScheduledBackupAggregate) ShouldCreateCronJob() bool {
 	return sb.Spec.CronJob.Enabled
 }
 
-func (sb ScheduledBackupAggregate) GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate {
+func (sb ScheduledBackupAggregate) GetTemplate() Template {
 	return sb.Template
 }
 

@@ -148,6 +148,17 @@ func (c *Factory) hydrateGPGSecret(ctx context.Context, a *domain.ScheduledBacku
 
 // Fetch an associated template [ScheduledBackup]
 func (c *Factory) hydrateTemplate(ctx context.Context, a *domain.ScheduledBackupAggregate) error {
+	//
+	// InternalTemplate allows to use templates bundled with Backup Maker Generator
+	//
+	if a.ScheduledBackup.Spec.TemplateRef.Kind == "internal" {
+		a.Template = domain.InternalTemplate{Name: a.ScheduledBackup.Spec.TemplateRef.Name}
+		return nil
+	}
+
+	//
+	// Cluster Templates are defined as CRD in Kubernetes
+	//
 	tpl, tplErr := c.fetcher.fetchTemplate(ctx, a.ScheduledBackup)
 	if tplErr != nil {
 		return errors.Wrap(tplErr, "cannot fetch ClusterBackupProcedureTemplate type object")

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ohler55/ojg/jp"
 	"github.com/pkg/errors"
-	"github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-controller/pkg/domain"
 	"github.com/riotkit-org/br-backup-maker/generate"
 	"github.com/sirupsen/logrus"
@@ -12,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	apiyaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -68,7 +66,7 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 	// Write backup/restore procedure template
 	// Extracts `kind: ClusterBackupProcedureTemplate` into a local file
 	_ = os.MkdirAll("./templates/"+string(operation), 0755)
-	templatePath := "./templates/" + string(operation) + "/" + backup.GetTemplate().Name + ".tmpl"
+	templatePath := "./templates/" + string(operation) + "/" + backup.GetTemplate().GetName() + ".tmpl"
 	if writeErr := writeTemplate(backup.GetTemplate(), operation, templatePath); writeErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(writeErr, fmt.Sprintf("cannot write template at path '%s'", templatePath))
 	}
@@ -90,14 +88,14 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 		return []unstructured.Unstructured{}, errors.Wrap(err, "cannot populate ~/.bm with templates")
 	}
 	cmd := generate.SnippetGenerationCommand{
-		Template:       backup.GetTemplate().Name,
+		Template:       backup.GetTemplate().GetName(),
 		DefinitionFile: definitionPath,
 		IsKubernetes:   true,
 		KeyPath:        gpgPath,
 		OutputDir:      dir + "/output",
 		Schedule:       backup.GetScheduledBackup().Spec.CronJob.ScheduleEvery,
 		JobName:        backup.GetScheduledBackup().Name,
-		Image:          backup.GetTemplate().Spec.Image,
+		Image:          backup.GetTemplate().GetImage(),
 		Operation:      string(operation),
 		Namespace:      backup.GetScheduledBackup().Namespace,
 	}
@@ -109,13 +107,14 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 }
 
 // writeTemplate is writing the backup/restore procedure template
-func writeTemplate(template *v1alpha1.ClusterBackupProcedureTemplate, operation domain.Operation, path string) error {
-	_ = os.MkdirAll(filepath.Dir(path), 0700)
-
-	content := template.Spec.Restore
-	// todo: enum
+func writeTemplate(template domain.Template, operation domain.Operation, path string) error {
+	if !template.ProvidesScript() {
+		logrus.Debugln("Skipping script provision: !ProvidesScript()")
+		return nil
+	}
+	content := template.GetRestoreScript()
 	if operation == domain.Backup {
-		content = template.Spec.Backup
+		content = template.GetBackupScript()
 	}
 	return os.WriteFile(path, []byte(content), 0700)
 }

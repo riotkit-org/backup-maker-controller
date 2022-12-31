@@ -58,7 +58,7 @@ func (sb RequestedBackupActionAggregate) ShouldCreateCronJob() bool {
 	return false
 }
 
-func (a RequestedBackupActionAggregate) GetTemplate() *v1alpha1.ClusterBackupProcedureTemplate {
+func (a RequestedBackupActionAggregate) GetTemplate() Template {
 	return a.Scheduled.Template
 }
 
