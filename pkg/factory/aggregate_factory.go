@@ -151,7 +151,7 @@ func (c *Factory) hydrateTemplate(ctx context.Context, a *domain.ScheduledBackup
 	//
 	// InternalTemplate allows to use templates bundled with Backup Maker Generator
 	//
-	if a.ScheduledBackup.Spec.TemplateRef.Kind == "internal" {
+	if a.ScheduledBackup.Spec.TemplateRef.Kind == domain.InternalTemplateKind {
 		a.Template = domain.InternalTemplate{Name: a.ScheduledBackup.Spec.TemplateRef.Name}
 		return nil
 	}

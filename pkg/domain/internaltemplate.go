@@ -1,5 +1,7 @@
 package domain
 
+const InternalTemplateKind = "internal"
+
 // InternalTemplate
 // ----------------
 //
