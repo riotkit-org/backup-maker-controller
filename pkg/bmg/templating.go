@@ -88,7 +88,7 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 		return []unstructured.Unstructured{}, errors.Wrap(err, "cannot populate ~/.bm with templates")
 	}
 	cmd := generate.SnippetGenerationCommand{
-		Template:       backup.GetTemplate().GetName(),
+		TemplateName:   backup.GetTemplate().GetName(),
 		DefinitionFile: definitionPath,
 		IsKubernetes:   true,
 		KeyPath:        gpgPath,
