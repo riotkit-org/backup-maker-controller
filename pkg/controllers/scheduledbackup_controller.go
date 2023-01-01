@@ -116,7 +116,7 @@ func (r *ScheduledBackupReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			return ctrl.Result{RequeueAfter: time.Minute * 15}, err
 		}
 
-		if applyErr := bmg.ApplyScheduledBackup(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
+		if applyErr := bmg.ApplyObjects(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
 			r.updateObject(ctx, aggregate, metav1.Condition{
 				Status:  "False",
 				Message: fmt.Sprintf("Cannot template or apply objects to the cluster: %s", applyErr.Error()),

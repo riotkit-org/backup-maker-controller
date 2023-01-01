@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	riotkitorgv1alpha1 "github.com/riotkit-org/backup-maker-controller/pkg/apis/riotkit/v1alpha1"
 	"github.com/riotkit-org/backup-maker-controller/pkg/bmg"
 	"github.com/riotkit-org/backup-maker-controller/pkg/client/clientset/versioned/typed/riotkit/v1alpha1"
@@ -102,13 +103,13 @@ func (r *RequestedBackupActionReconciler) Reconcile(ctx context.Context, req ctr
 	//
 	// 2. Template & Create selected resources (only `kind: Job` type resources. The rest like Secrets and ConfigMaps we expect will be there already, created by ScheduledBackup)
 	//
-	if applyErr := bmg.ApplyScheduledBackup(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
+	if applyErr := bmg.ApplyObjects(ctx, logger, r.Recorder, r.RestCfg, r.DynClient, aggregate); applyErr != nil {
 		r.updateObjectStatus(ctx, logger, aggregate, metav1.Condition{
 			Status:  "False",
 			Message: fmt.Sprintf("Cannot find required dependencies: %s", applyErr.Error()),
 		})
 		r.Recorder.Event(aggregate.RequestedBackupAction, "Warning", "ErrorOccurred", applyErr.Error())
-		return ctrl.Result{RequeueAfter: time.Second * 30}, applyErr
+		return ctrl.Result{RequeueAfter: time.Second * 30}, errors.Wrap(applyErr, "cannot ApplyObjects()")
 	}
 
 	//

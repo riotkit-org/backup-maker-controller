@@ -12,8 +12,8 @@ import (
 	"k8s.io/client-go/tools/record"
 )
 
-// ApplyScheduledBackup is applying objects to the cluster, while adding necessary metadata
-func ApplyScheduledBackup(ctx context.Context, logger *logrus.Entry, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup domain.Renderable) error {
+// ApplyObjects is applying objects to the cluster, while adding necessary metadata
+func ApplyObjects(ctx context.Context, logger *logrus.Entry, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup domain.Renderable) error {
 	rendered, renderErr := RenderKubernetesResourcesFor(logger, backup)
 	if renderErr != nil {
 		return errors.Wrap(renderErr, "cannot apply rendered objects to the cluster")

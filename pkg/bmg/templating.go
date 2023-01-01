@@ -1,6 +1,7 @@
 package bmg
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ohler55/ojg/jp"
 	"github.com/pkg/errors"
@@ -11,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	apiyaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -46,6 +48,8 @@ func RenderKubernetesResourcesFor(logger *logrus.Entry, backup domain.Renderable
 func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.Renderable,
 	operation domain.Operation, acceptedResourceTypes domain.ResourceTypes) ([]unstructured.Unstructured, error) {
 
+	logger.Debugln("RenderKubernetesResourcesForOperation()")
+
 	// Create a temporary workspace directory
 	pwd, _ := os.Getwd()
 	defer func(dir string) {
@@ -67,7 +71,7 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 	// Extracts `kind: ClusterBackupProcedureTemplate` into a local file
 	_ = os.MkdirAll("./templates/"+string(operation), 0755)
 	templatePath := "./templates/" + string(operation) + "/" + backup.GetTemplate().GetName() + ".tmpl"
-	if writeErr := writeTemplate(backup.GetTemplate(), operation, templatePath); writeErr != nil {
+	if writeErr := writeTemplate(logger, backup.GetTemplate(), operation, templatePath); writeErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(writeErr, fmt.Sprintf("cannot write template at path '%s'", templatePath))
 	}
 
@@ -107,15 +111,42 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 }
 
 // writeTemplate is writing the backup/restore procedure template
-func writeTemplate(template domain.Template, operation domain.Operation, path string) error {
+func writeTemplate(logger *logrus.Entry, template domain.Template, operation domain.Operation, path string) error {
 	if !template.ProvidesScript() {
-		logrus.Debugln("Skipping script provision: !ProvidesScript()")
+		logger.Debugln("Skipping script provision: !ProvidesScript()")
 		return nil
 	}
+	logger.Debugf("writeTemplate(name: %v)", template)
+
 	content := template.GetRestoreScript()
 	if operation == domain.Backup {
 		content = template.GetBackupScript()
 	}
+
+	// write JSON metadata file
+	tplDef := generate.TemplateDefinition{
+		DefaultImage: "this-should-be-overridden", // image is always overridden, so we do not set default value
+
+		// operator writes both scripts under same name, but different subdirectories of course
+		RestoreTemplate: template.GetName() + ".tmpl",
+		BackupTemplate:  template.GetName() + ".tmpl",
+	}
+	defAsStr, defMarshalErr := json.Marshal(&tplDef)
+	if defMarshalErr != nil {
+		return errors.Wrap(defMarshalErr, "cannot marshal TemplateDefinition{} to JSON")
+	}
+
+	definitionDir := filepath.Dir(path) + "/../definition"
+	if mkdirErr := os.MkdirAll(definitionDir, 0700); mkdirErr != nil {
+		return errors.Wrapf(mkdirErr, "cannot create definition dir - %s", definitionDir)
+	}
+
+	definitionPath := definitionDir + "/" + template.GetName() + ".json"
+	logger.Debugf("Writing a JSON definition file: %s", definitionPath)
+	if writeErr := os.WriteFile(definitionPath, defAsStr, 0700); writeErr != nil {
+		return errors.Wrapf(writeErr, "cannot write a file - %s", definitionPath)
+	}
+
 	return os.WriteFile(path, []byte(content), 0700)
 }
 
