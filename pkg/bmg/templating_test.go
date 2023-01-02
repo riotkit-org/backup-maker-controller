@@ -61,3 +61,131 @@ func TestWriteTemplate_InternalTemplate(t *testing.T) {
 	assert.NotNil(t, existsErr)
 	assert.Contains(t, existsErr.Error(), "no such file or directory")
 }
+
+func TestParseRenderedManifests_FiltersOutKinds_RBACase(t *testing.T) {
+	content := `---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: app1-backup
+data:
+    hello: world
+    goodbye: capitalism
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: app1-backup
+`
+
+	objects, err := parseRenderedManifests(logrus.WithContext(context.TODO()), content,
+		domain.NewResourceTypesFilterForRequestedBackupAction())
+
+	assert.Len(t, objects, 1)
+	assert.Equal(t, "Job", objects[0].GroupVersionKind().Kind)
+	assert.Nil(t, err)
+}
+
+func TestParseRenderedManifests_FiltersOutKinds_SBCase(t *testing.T) {
+	content := `---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: app1-backup
+data:
+    hello: world
+    goodbye: capitalism
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: app1-backup
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: app1-backup
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    name: app1-backup
+`
+
+	objects, err := parseRenderedManifests(logrus.WithContext(context.TODO()), content,
+		domain.NewResourceTypesFilterForScheduledBackup(
+			&domain.ScheduledBackupAggregate{
+				ScheduledBackup: &v1alpha1.ScheduledBackup{
+					Spec: v1alpha1.ScheduledBackupSpec{
+						Operation: "backup",
+						CronJob: v1alpha1.CronJobSpec{
+							Enabled:       false,
+							ScheduleEvery: "",
+						},
+					},
+				},
+			},
+			domain.Backup,
+		))
+
+	assert.Len(t, objects, 2)
+	assert.Equal(t, "ConfigMap", objects[0].GroupVersionKind().Kind)
+	assert.Equal(t, "Secret", objects[1].GroupVersionKind().Kind)
+	assert.Nil(t, err)
+}
+
+func TestParseRenderedManifests_FiltersOutKinds_SBCase_WithCronJob(t *testing.T) {
+	content := `---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: app1-backup
+data:
+    hello: world
+    goodbye: capitalism
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: app1-backup
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: app1-backup
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    name: app1-backup
+`
+
+	objects, err := parseRenderedManifests(logrus.WithContext(context.TODO()), content,
+		domain.NewResourceTypesFilterForScheduledBackup(
+			&domain.ScheduledBackupAggregate{
+				ScheduledBackup: &v1alpha1.ScheduledBackup{
+					Spec: v1alpha1.ScheduledBackupSpec{
+						Operation: "backup",
+						CronJob: v1alpha1.CronJobSpec{
+							Enabled:       true, // NOTICE HERE: CronJob is enabled
+							ScheduleEvery: "*/3 * * * *",
+						},
+					},
+				},
+			},
+			domain.Backup,
+		))
+
+	assert.Len(t, objects, 3)
+	assert.Equal(t, "ConfigMap", objects[0].GroupVersionKind().Kind)
+	assert.Equal(t, "Secret", objects[1].GroupVersionKind().Kind)
+	assert.Equal(t, "CronJob", objects[2].GroupVersionKind().Kind)
+	assert.Nil(t, err)
+}

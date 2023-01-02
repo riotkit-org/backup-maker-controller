@@ -107,7 +107,16 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 	if genErr != nil {
 		return []unstructured.Unstructured{}, errors.Wrap(genErr, "error while generating manifests")
 	}
-	return readRenderedManifests(logger, dir+"/output/"+string(operation)+".yaml", acceptedResourceTypes)
+
+	// read what was generated
+	manifestsPath := dir + "/output/" + string(operation) + ".yaml"
+	content, readErr := os.ReadFile(manifestsPath)
+	if readErr != nil {
+		return []unstructured.Unstructured{}, errors.Wrap(readErr, fmt.Sprintf(
+			"cannot read rendered manifest file at path '%s'", manifestsPath))
+	}
+
+	return parseRenderedManifests(logger, string(content), acceptedResourceTypes)
 }
 
 // writeTemplate is writing the backup/restore procedure template
@@ -150,20 +159,13 @@ func writeTemplate(logger *logrus.Entry, template domain.Template, operation dom
 	return os.WriteFile(path, []byte(content), 0700)
 }
 
-// readRenderedManifests is reading manifests from YAML into []UnstructuredObject
-func readRenderedManifests(logger *logrus.Entry, manifestPath string, kindsToRender domain.ResourceTypes) ([]unstructured.Unstructured, error) {
-	// reading
-	content, readErr := os.ReadFile(manifestPath)
-	if readErr != nil {
-		return []unstructured.Unstructured{}, errors.Wrap(readErr, fmt.Sprintf(
-			"cannot read rendered manifest file at path '%s'", manifestPath))
-	}
-
+// parseRenderedManifests is reading manifests from YAML into []UnstructuredObject
+func parseRenderedManifests(logger *logrus.Entry, content string, kindsToRender domain.ResourceTypes) ([]unstructured.Unstructured, error) {
 	decoder := apiyaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 
 	// parsing
 	var objects []unstructured.Unstructured
-	docsContent := strings.Split(string(content), "---\n")
+	docsContent := strings.Split(content, "---\n")
 
 	for _, doc := range docsContent {
 		doc = strings.Trim(strings.Replace(doc, "---\n", "", 1), " \n")
