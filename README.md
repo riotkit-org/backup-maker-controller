@@ -5,20 +5,20 @@ Part of Backup Repository ecosystem. Operates Kubernetes Jobs performing automat
 
 ### Roadmap
 
-#### v1
+#### v0.1
 
 - [x] `ScheduledBackup` CRD for defining backup parameters and optionally scheduling a `CronJob`
 - [x] `RequestedBackupAction` CRD for immediately triggering a backup or restore on demand
 - [x] [Helm Chart](./charts/backup-maker-controller)
 - [x] Support for reporting `kind: Job` status to the main CRD's `.status` field
 - [x] [Safe concurrency with locking mechanism using in-memory and distributed Redis lockers. Thanks to this multiple sub-controllers will not process in parallel the same resource which reduces compute complexity and saves lots of resources](./pkg/locking)
-- [ ] Support for internal _Backup Maker_ templates, so the templates would not be necessary to be redefined as `ClusterBackupProcedureTemplate` CRD
+- [x] Support for internal _Backup Maker_ templates, so the templates would not be necessary to be redefined as `ClusterBackupProcedureTemplate` CRD
 
-#### v1.1
+#### v1.0
 
 - [ ] Watch status of CronJobs and it's last executions, report to `.status` field
 
-#### v1.2
+#### v1.1
 
 - [ ] Integration with ArgoCD to see correct health status
 - [ ] Integration with Argo Workflows to use Workflows instead of Kubernetes Jobs
