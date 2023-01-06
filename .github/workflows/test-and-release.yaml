@@ -11,6 +11,7 @@ jobs:
             sonarCloudEnabled: false
             dockerReleasingEnabled: true
             publishingHelmChartEnabled: true
+            chartsDir: "charts"
 
         secrets:
             SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
