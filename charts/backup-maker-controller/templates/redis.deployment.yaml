@@ -35,4 +35,16 @@ spec:
                   env:
                       - name: ALLOW_EMPTY_PASSWORD
                         value: yes
+            {{- with .Values.redis.nodeSelector }}
+            nodeSelector:
+                {{- toYaml . | nindent 16 }}
+            {{- end }}
+            {{- with .Values.redis.affinity }}
+            affinity:
+                {{- toYaml . | nindent 16 }}
+            {{- end }}
+            {{- with .Values.redis.tolerations }}
+            tolerations:
+                {{- toYaml . | nindent 16 }}
+            {{- end }}
 {{ end }}

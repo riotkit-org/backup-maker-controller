@@ -35,6 +35,9 @@ SHELL = /usr/bin/env bash -o pipefail
 .PHONY: all
 all: build
 
+.EXPORT_ALL_VARIABLES:
+PATH = $(shell pwd)/.build:$(shell echo $$PATH)
+
 ##@ Development
 
 .PHONY: manifests
@@ -54,8 +57,11 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
+test: manifests generate fmt vet envtest helm-lint ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+
+helm-lint:
+	cd charts/backup-maker-controller/ && make lint
 
 .PHONY: coverage
 coverage: test

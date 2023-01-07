@@ -44,3 +44,11 @@ redis:
         create: true
 
     resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
