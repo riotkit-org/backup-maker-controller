@@ -151,6 +151,27 @@ spec:
         name: app1
 ```
 
+### FAQ
+
+1. Map has no entry for key password
+
+```
+Cannot template or apply objects to the cluster: cannot apply rendered
+        objects to the cluster: error while generating manifests: cannot render
+        template, execution failed. Error: template: pg14:7:46: executing "pg14"
+        at <.Params.password>: map has no entry for key "password"
+```
+
+Check that your `kind: Secret` referenced in ScheduledBackup contains a key "Params.password", the reference is defined at this section:
+
+```yaml
+# (...)
+varsSecretRef:
+    importOnlyKeys:
+      - Params.password
+    secretName: postgres-test-1
+```
+
 ### License
 
 Copyright 2022 Riotkit.
