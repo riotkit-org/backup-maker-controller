@@ -27,7 +27,7 @@ jobs:
             intermediateArtifactsPath: ".build/"
 
     helm:
-        needs: ["build"]
+        needs: ["build", "container"]
         uses: riotkit-org/.github/.github/workflows/release.helm.yaml@release-1
         with:
             chartPath: charts/backup-maker-controller
