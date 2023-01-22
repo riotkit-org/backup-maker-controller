@@ -11,7 +11,6 @@ jobs:
             intermediateArtifactsPath: ".build/"
         secrets:
             SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
-            GH_RW_TOKEN: "${{ secrets.GH_RW_TOKEN }}"
 
     bin:
         needs: ["build"]
