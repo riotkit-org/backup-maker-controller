@@ -4,15 +4,32 @@ on:
 
 jobs:
     build:
-        uses: riotkit-org/.github/.github/workflows/go-kubernetes.release.yaml@main
+        uses: riotkit-org/.github/.github/workflows/build.go.yaml@release-1
         with:
             binaryName: manager
-            dockerImage: ghcr.io/riotkit-org/backup-maker-controller
             sonarCloudEnabled: false
-            dockerReleasingEnabled: true
-            publishingHelmChartEnabled: true
-            chartsDir: "charts"
-
+            intermediateArtifactsPath: ".build/"
         secrets:
             SONAR_TOKEN: "${{ secrets.SONAR_TOKEN }}"
             GH_RW_TOKEN: "${{ secrets.GH_RW_TOKEN }}"
+
+    bin:
+        needs: ["build"]
+        uses: riotkit-org/.github/.github/workflows/release.binary.yaml@release-1
+        with:
+            binaryName: manager
+            intermediateArtifactsPath: ".build/"
+
+    container:
+        needs: ["build"]
+        uses: riotkit-org/.github/.github/workflows/release.container.yaml@release-1
+        with:
+            dockerImage: ghcr.io/riotkit-org/backup-maker-controller
+            intermediateArtifactsPath: ".build/"
+
+    helm:
+        needs: ["build"]
+        uses: riotkit-org/.github/.github/workflows/release.helm.yaml@release-1
+        with:
+            chartPath: charts/backup-maker-controller
+            chartRepoSuffix: "charts/"
