@@ -35,7 +35,7 @@ spec:
                       - --redis-port={{ $.Values.redis.port | default "6379" }}
                   {{ end }}
                   imagePullPolicy: {{ $.Values.image.pullPolicy }}
-                  image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
+                  image: {{ $.Values.image.repository }}:{{ include "controller.imageTag" . }}
                   securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:

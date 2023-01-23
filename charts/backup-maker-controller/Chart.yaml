@@ -3,4 +3,4 @@ name: backup-maker-controller
 description: "Takes care about Backup & Restore procedures in your Kubernetes cluster"
 type: application
 version: 0.1.0     # managed by GH Actions
-appVersion: "main" # managed by GH Actions
+appVersion: "0.0-latest-main" # managed by GH Actions

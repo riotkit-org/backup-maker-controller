@@ -6,6 +6,21 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+When: .image.tag is empty then
+a) for "0.0-latest-main" put just "main" (as we publish image with "main" or tag)
+b) or just tag name
+Else (when .image.tag is specified):
+a) Just use the .image.tag
+*/}}
+{{- define "controller.imageTag" -}}
+{{- if eq .Values.image.tag "" -}}
+{{- if eq .Chart.AppVersion "0.0-latest-main" -}}main{{- else -}}{{- .Chart.AppVersion -}}{{- end -}}
+{{- else -}}
+{{- .Values.image.tag -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
