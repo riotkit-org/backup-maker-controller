@@ -52,7 +52,7 @@ jobs:
                   workflow_file_name: test-and-release.yaml
                   ref: main
                   wait_interval: 5
-                  client_payload: '{"revision": "${{ github.sha }}", "targetBranch": "main"}'
+                  client_payload: '{}'
                   propagate_failure: true
                   trigger_workflow: true
                   wait_workflow: true
