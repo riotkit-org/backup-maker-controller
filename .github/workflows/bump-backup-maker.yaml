@@ -33,7 +33,6 @@ jobs:
               with:
                   go-version: 1.19
 
-
             - name: Bump dependency
               run: "go get ${{ github.event.inputs.dependencyName }}@${{ github.event.inputs.revision }}"
 
@@ -42,3 +41,18 @@ jobs:
 
             - name: Push
               run: "git push"
+
+            - name: Invoke build pipeline for main branch
+              uses: convictional/trigger-workflow-and-wait@v1.6.5
+              with:
+                  owner: riotkit-org
+                  repo: backup-maker-operator
+                  github_token: ${{ secrets.GH_RW_TOKEN }}
+                  github_user: blackandred
+                  workflow_file_name: test-and-release.yaml
+                  ref: main
+                  wait_interval: 5
+                  client_payload: '{"revision": "${{ github.sha }}", "targetBranch": "main"}'
+                  propagate_failure: true
+                  trigger_workflow: true
+                  wait_workflow: true
