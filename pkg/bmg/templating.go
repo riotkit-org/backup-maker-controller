@@ -93,7 +93,7 @@ func RenderKubernetesResourcesForOperation(logger *logrus.Entry, backup domain.R
 	}
 	cmd := generate.SnippetGenerationCommand{
 		TemplateName:   backup.GetTemplate().GetName(),
-		DefinitionFile: definitionPath,
+		UserConfigFile: definitionPath,
 		IsKubernetes:   true,
 		KeyPath:        gpgPath,
 		OutputDir:      dir + "/output",
