@@ -249,7 +249,7 @@ func writeDefinition(logger *logrus.Entry, backup *domain.ScheduledBackupAggrega
 				return errors.Wrap(err, fmt.Sprintf("cannot parse dot-notation path to convert from some.path.dot format. Name: '%s'", path))
 			}
 			if setErr := expression.Set(vars, string(value)); setErr != nil {
-				return errors.Wrap(err, fmt.Sprintf("cannot merge value from Secret into the vars, name: '%s'", path))
+				return errors.Wrap(setErr, fmt.Sprintf("cannot merge value from Secret into the vars, name: '%s'", path))
 			}
 		}
 	}

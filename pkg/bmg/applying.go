@@ -16,6 +16,7 @@ import (
 func ApplyObjects(ctx context.Context, logger *logrus.Entry, recorder record.EventRecorder, restCfg *rest.Config, dynClient dynamic.Interface, backup domain.Renderable) error {
 	rendered, renderErr := RenderKubernetesResourcesFor(logger, backup)
 	if renderErr != nil {
+		logger.Errorln(renderErr)
 		return errors.Wrap(renderErr, "cannot apply rendered objects to the cluster")
 	}
 
