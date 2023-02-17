@@ -10,7 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.24.1
 	github.com/pkg/errors v0.9.1
-	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230216071457-3bc0b69a7fdc
+	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230217213444-d72f7fd259ce
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.15.0
