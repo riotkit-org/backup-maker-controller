@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/gopenpgp/v2 v2.5.2
-	github.com/bsm/redislock v0.8.2
+	github.com/bsm/redislock v0.9.0
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/ohler55/ojg v1.14.5
 	github.com/pkg/errors v0.9.1
@@ -42,6 +42,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/redis/go-redis/v9 v9.0.1 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
 	google.golang.org/grpc v1.49.0 // indirect
@@ -53,7 +54,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
