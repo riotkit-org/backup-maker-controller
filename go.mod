@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/gopenpgp/v2 v2.5.2
 	github.com/bsm/redislock v0.8.2
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
-	github.com/ohler55/ojg v1.14.5
+	github.com/ohler55/ojg v1.17.5
 	github.com/pkg/errors v0.9.1
 	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230228185907-ed7dde2e1d5a
 	github.com/sirupsen/logrus v1.9.0
