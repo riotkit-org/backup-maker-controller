@@ -8,7 +8,7 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/ohler55/ojg v1.14.5
 	github.com/pkg/errors v0.9.1
-	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230315201857-f594c54f4053
+	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230315202023-d0acde4ee2aa
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
 	github.com/testcontainers/testcontainers-go v0.18.0
@@ -73,8 +73,8 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0
-	github.com/huandu/xstrings v1.3.3 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/huandu/xstrings v1.4.0 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -89,8 +89,8 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/spf13/cast v1.4.1 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
@@ -111,7 +111,7 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	helm.sh/helm/v3 v3.11.0 // indirect
+	helm.sh/helm/v3 v3.11.2 // indirect
 	k8s.io/apiextensions-apiserver v0.26.1 // indirect
 	k8s.io/component-base v0.26.1 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
