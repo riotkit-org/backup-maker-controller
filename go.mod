@@ -8,7 +8,7 @@ require (
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/ohler55/ojg v1.14.5
 	github.com/pkg/errors v0.9.1
-	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230318221740-58ca666bafb2
+	github.com/riotkit-org/br-backup-maker v1.0.0-rc1.0.20230318231040-8c7f6c4ad5e8
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
 	github.com/testcontainers/testcontainers-go v0.18.0
